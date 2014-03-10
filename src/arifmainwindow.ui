@@ -1,0 +1,220 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>arifMainWindow</class>
+ <widget class="QMainWindow" name="arifMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>632</width>
+    <height>587</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Arif</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QVBoxLayout" name="verticalLayout_4">
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>0</number>
+      </property>
+      <widget class="QWidget" name="settingsTab">
+       <attribute name="title">
+        <string>Settings</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_5">
+        <item>
+         <widget class="QGroupBox" name="imageSettingsGroup">
+          <property name="title">
+           <string>Image saving and display</string>
+          </property>
+          <layout class="QFormLayout" name="formLayout_4">
+           <property name="fieldGrowthPolicy">
+            <enum>QFormLayout::ExpandingFieldsGrow</enum>
+           </property>
+           <item row="7" column="0" colspan="2">
+            <widget class="QFrame" name="imageDestinationBox">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>Image destination directory:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QLineEdit" name="imageDestinationDirectory"/>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="imageDestinationButton">
+                  <property name="icon">
+                   <iconset theme="document-open">
+                    <normaloff/>
+                   </iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="1" column="0">
+            <widget class="QLabel" name="blackLevelLabel">
+             <property name="text">
+              <string>Black level:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
+            <widget class="QSpinBox" name="blackLevelBox">
+             <property name="maximum">
+              <number>255</number>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="0">
+            <widget class="QLabel" name="cropWidthLabel">
+             <property name="text">
+              <string>Cropping width:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="0" column="1">
+            <widget class="QSpinBox" name="cropWidthBox">
+             <property name="minimum">
+              <number>16</number>
+             </property>
+             <property name="maximum">
+              <number>10000</number>
+             </property>
+             <property name="value">
+              <number>315</number>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QCheckBox" name="showEveryFrameCheck"/>
+           </item>
+           <item row="5" column="1">
+            <widget class="QCheckBox" name="writeImagesCheck">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_19">
+             <property name="text">
+              <string>Display every frame</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_18">
+             <property name="text">
+              <string>Save images</string>
+             </property>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_2" stretch="0">
+          <item>
+           <widget class="QPushButton" name="processButton">
+            <property name="text">
+             <string>Process</string>
+            </property>
+            <property name="checkable">
+             <bool>true</bool>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QDockWidget" name="videoDock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>Arif view</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="widget">
+    <layout class="QVBoxLayout" name="verticalLayout_3">
+     <item>
+      <widget class="GLVideoWidget" name="videoWidget" native="true"/>
+     </item>
+     <item>
+      <widget class="QSlider" name="seekSlider">
+       <property name="orientation">
+        <enum>Qt::Horizontal</enum>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+ </widget>
+ <customwidgets>
+  <customwidget>
+   <class>GLVideoWidget</class>
+   <extends>QWidget</extends>
+   <header>glvideowidget.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <tabstops>
+  <tabstop>tabWidget</tabstop>
+  <tabstop>cropWidthBox</tabstop>
+  <tabstop>blackLevelBox</tabstop>
+  <tabstop>showEveryFrameCheck</tabstop>
+  <tabstop>writeImagesCheck</tabstop>
+  <tabstop>imageDestinationDirectory</tabstop>
+  <tabstop>imageDestinationButton</tabstop>
+  <tabstop>processButton</tabstop>
+  <tabstop>seekSlider</tabstop>
+ </tabstops>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>writeImagesCheck</sender>
+   <signal>clicked(bool)</signal>
+   <receiver>imageDestinationBox</receiver>
+   <slot>setEnabled(bool)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>178</x>
+     <y>314</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>255</x>
+     <y>396</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+ <slots>
+  <slot>workerConfigurationComplete()</slot>
+ </slots>
+ <buttongroups>
+  <buttongroup name="filteringModeButtons"/>
+ </buttongroups>
+</ui>

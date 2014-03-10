@@ -16,16 +16,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtGui/QApplication>
-#include "arifmainwindow.h"
+#ifndef ARIFMAINWINDOW_H
+#define ARIFMAINWINDOW_H
 
-int main(int argc, char* argv[])
-{
-    QApplication a(argc, argv);
-    QCoreApplication::setOrganizationDomain("ad-vega.si");
-    QCoreApplication::setOrganizationName("AD Vega");
-    QCoreApplication::setApplicationName("arif");
-    ArifMainWindow w;
-    w.show();
-    return a.exec();
-}
+#include "ui_arifmainwindow.h"
+
+class ArifMainWindow : public QMainWindow, private Ui::arifMainWindow {
+    Q_OBJECT
+
+public:
+    explicit ArifMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+};
+
+#endif

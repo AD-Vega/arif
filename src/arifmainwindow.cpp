@@ -16,16 +16,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtGui/QApplication>
 #include "arifmainwindow.h"
 
-int main(int argc, char* argv[])
+ArifMainWindow::ArifMainWindow(QWidget* parent, Qt::WindowFlags flags): QMainWindow(parent, flags)
 {
-    QApplication a(argc, argv);
-    QCoreApplication::setOrganizationDomain("ad-vega.si");
-    QCoreApplication::setOrganizationName("AD Vega");
-    QCoreApplication::setApplicationName("arif");
-    ArifMainWindow w;
-    w.show();
-    return a.exec();
+    setupUi(this);
 }

@@ -1,6 +1,6 @@
 project(arif)
 cmake_minimum_required(VERSION 2.8)
-find_package(Qt4 REQUIRED QtCore QtGui QtOpenGL QtNetwork)
+find_package(Qt4 REQUIRED QtCore QtGui QtOpenGL QtNetwork QtSVG)
 include(${QT_USE_FILE})
 include(FindPkgConfig)
 
@@ -28,23 +28,28 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
 include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/src ${QWT_INCLUDE})
 
-set_prefixed(qhidra_UI_pre src/
+set_prefixed(arif_UI_pre src/
+  arifmainwindow.ui
 )
-qt4_wrap_ui(qhidra_UI
-  ${qhidra_UI_pre}
+qt4_wrap_ui(arif_UI
+  ${arif_UI_pre}
 )
-set_prefixed(qhidra_SRC src/
+set_prefixed(arif_SRC src/
   main.cpp
+  glvideowidget.cpp
+  arifmainwindow.cpp
 )
-set_prefixed(qhidra_MOC src/ 
+set_prefixed(arif_MOC src/
+  glvideowidget.h
+  arifmainwindow.h
 )
-qt4_wrap_cpp(qhidra_MOC_MOCD
-  ${qhidra_MOC}
+qt4_wrap_cpp(arif_MOC_MOCD
+  ${arif_MOC}
 )
 add_executable(arif
-  ${qhidra_SRC}
-  ${qhidra_MOC_MOCD}
-  ${qhidra_UI}
+  ${arif_SRC}
+  ${arif_MOC_MOCD}
+  ${arif_UI}
 )
 target_link_libraries(arif
   ${QT_LIBRARIES}
