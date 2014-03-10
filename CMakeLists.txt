@@ -1,0 +1,60 @@
+project(arif)
+cmake_minimum_required(VERSION 2.8)
+find_package(Qt4 REQUIRED QtCore QtGui QtOpenGL QtNetwork)
+include(${QT_USE_FILE})
+include(FindPkgConfig)
+
+macro(set_prefixed varname string)
+  set(${varname})
+  foreach(name ${ARGN})
+    set( ${varname} ${${varname}} ${string}${name} )
+  endforeach(name)
+endmacro(set_prefixed)
+
+find_path(QWT_INCLUDE qwt_plot.h PATH_SUFFIXES qwt6 qwt)
+find_package( OpenCV REQUIRED )
+pkg_check_modules(PKGCONFS REQUIRED qarv-1 libswscale libavcodec libavutil)
+find_library(FFTW_LIB fftw3f)
+find_library(QWT_LIB NAMES qwt6 qwt)
+find_library(ZLIB z)
+find_library(X11 X11)
+find_library(PTHR pthread)
+
+string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${PKGCONFS_CFLAGS}")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
+set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
+
+include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
+  ${CMAKE_CURRENT_SOURCE_DIR}/src ${QWT_INCLUDE})
+
+set_prefixed(qhidra_UI_pre src/
+)
+qt4_wrap_ui(qhidra_UI
+  ${qhidra_UI_pre}
+)
+set_prefixed(qhidra_SRC src/
+  main.cpp
+)
+set_prefixed(qhidra_MOC src/ 
+)
+qt4_wrap_cpp(qhidra_MOC_MOCD
+  ${qhidra_MOC}
+)
+add_executable(arif
+  ${qhidra_SRC}
+  ${qhidra_MOC_MOCD}
+  ${qhidra_UI}
+)
+target_link_libraries(arif
+  ${QT_LIBRARIES}
+  ${FFTW_LIB}
+  ${SWSCALE_LIB}
+  ${QARV_LIB}
+  ${QWT_LIB}
+  ${ZLIB}
+  ${X11}
+  ${PTHR}
+  ${PKGCONFS_LDFLAGS}
+  ${OpenCV_LIBS}
+)
