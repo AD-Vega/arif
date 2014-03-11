@@ -60,7 +60,7 @@ private:
     bool quit = false;
     bool render = false;
     QThreadPool* threadPool = QThreadPool::globalInstance();
-    QSharedPointer<const ProcessingSettings> settings;
+    QSharedPointer<ProcessingSettings> settings;
     QList<QSharedPointer<Decoder>> decoderPool;
     QSharedPointer<RawFrame> cachedFrame;
 };

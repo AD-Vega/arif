@@ -19,9 +19,9 @@
 #include "foreman.h"
 
 Foreman::Foreman(const ProcessingSettings& settings_, QObject* parent):
-    QObject(parent), settings(&settings_)
+    QObject(parent), settings(new ProcessingSettings)
 {
-
+    *settings = settings_;
 }
 
 void Foreman::start(const ProcessingSettings& settings)

@@ -17,8 +17,19 @@
  */
 
 #include "arifmainwindow.h"
+#include <QTimer>
 
-ArifMainWindow::ArifMainWindow(QWidget* parent, Qt::WindowFlags flags): QMainWindow(parent, flags)
+ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
+                               QWidget* parent,
+                               Qt::WindowFlags flags):
+    QMainWindow(parent, flags), sourcePlugin(plugin)
 {
     setupUi(this);
+    // Delay initialization until a later event loop cycle.
+    QTimer::singleShot(0, this, SLOT(initialize()));
+}
+
+void ArifMainWindow::initialize()
+{
+
 }

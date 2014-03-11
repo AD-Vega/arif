@@ -34,7 +34,7 @@ int main(int argc, char* argv[])
         plugin = s.result() == QDialog::Accepted ? s.selectedSource : nullptr;
     }
     if (plugin) {
-        ArifMainWindow w;
+        ArifMainWindow w(plugin);
         w.show();
         return a.exec();
     }

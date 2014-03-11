@@ -20,12 +20,25 @@
 #define ARIFMAINWINDOW_H
 
 #include "ui_arifmainwindow.h"
+#include "videosources/interfaces.h"
+#include "foreman.h"
 
-class ArifMainWindow : public QMainWindow, private Ui::arifMainWindow {
+class ArifMainWindow : public QMainWindow, private Ui::arifMainWindow
+{
     Q_OBJECT
 
 public:
-    explicit ArifMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    explicit ArifMainWindow(VideoSourcePlugin* plugin,
+                            QWidget* parent = 0,
+                            Qt::WindowFlags flags = 0);
+
+private slots:
+    void initialize();
+
+private:
+    VideoSourcePlugin* sourcePlugin;
+    ProcessingSettings settings;
+    QScopedPointer<Foreman> foreman;
 };
 
 #endif
