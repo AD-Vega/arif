@@ -14,11 +14,7 @@ endmacro(set_prefixed)
 find_path(QWT_INCLUDE qwt_plot.h PATH_SUFFIXES qwt6 qwt)
 find_package( OpenCV REQUIRED )
 pkg_check_modules(PKGCONFS REQUIRED qarv-1 libswscale libavcodec libavutil)
-find_library(FFTW_LIB fftw3f)
 find_library(QWT_LIB NAMES qwt6 qwt)
-find_library(ZLIB z)
-find_library(X11 X11)
-find_library(PTHR pthread)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${PKGCONFS_CFLAGS}")
@@ -68,13 +64,9 @@ add_executable(arif
 )
 target_link_libraries(arif
   ${QT_LIBRARIES}
-  ${FFTW_LIB}
   ${SWSCALE_LIB}
   ${QARV_LIB}
   ${QWT_LIB}
-  ${ZLIB}
-  ${X11}
-  ${PTHR}
   ${PKGCONFS_LDFLAGS}
   ${OpenCV_LIBS}
 )
