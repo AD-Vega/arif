@@ -18,7 +18,7 @@
 
 #include "videosources/interfaces.h"
 
-FrameMetaData::serialize(QDataStream& s)
+void FrameMetaData::serialize(QDataStream& s)
 {
   s << timestamp;
   s << frameOfSecond;

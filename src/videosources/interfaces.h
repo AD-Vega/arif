@@ -37,7 +37,7 @@ typedef QSharedPointer<Decoder> SharedDecoder;
 
 struct FrameMetaData
 {
-    serialize(QDataStream& s);
+    void serialize(QDataStream& s);
     void load(QDataStream& s);
 
     QDateTime timestamp;
@@ -61,7 +61,7 @@ class Decoder
 {
 public:
     virtual ~Decoder() {}
-    virtual cv::Mat decode(RawFrame* in) = 0;
+    virtual const cv::Mat decode(RawFrame* in) = 0;
     virtual VideoSourcePlugin* format() = 0;
 };
 
@@ -108,10 +108,10 @@ signals:
     void configurationComplete();
 };
 
-class VideoFormat
+class VideoSourcePlugin
 {
 public:
-    virtual ~VideoFormat() {}
+    virtual ~VideoSourcePlugin() {}
     virtual QString name() = 0;
     virtual VideoSourceConfigurationWidget* createConfigurationWidget() = 0;
     virtual SharedRawFrame createRawFrame() = 0;

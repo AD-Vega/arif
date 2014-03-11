@@ -28,25 +28,33 @@ set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
 include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
   ${CMAKE_CURRENT_SOURCE_DIR}/src ${QWT_INCLUDE})
 
+set_prefixed(arif_videosources_SRC videosources/
+  interfaces.cpp
+  rawvideo.cpp
+)
+set_prefixed(arif_videosources_MOC videosources/
+  interfaces.h
+  rawvideo.h
+)
 set_prefixed(arif_UI_pre src/
   arifmainwindow.ui
 )
-qt4_wrap_ui(arif_UI
-  ${arif_UI_pre}
-)
 set_prefixed(arif_SRC src/
+  ${arif_videosources_SRC}
   main.cpp
   glvideowidget.cpp
   arifmainwindow.cpp
   foreman.cpp
   processing.cpp
-  videosources/interfaces.cpp
 )
 set_prefixed(arif_MOC src/
+  ${arif_videosources_MOC}
   glvideowidget.h
   arifmainwindow.h
   foreman.h
-  videosources/interfaces.h
+)
+qt4_wrap_ui(arif_UI
+  ${arif_UI_pre}
 )
 qt4_wrap_cpp(arif_MOC_MOCD
   ${arif_MOC}
