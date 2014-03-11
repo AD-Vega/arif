@@ -40,11 +40,13 @@ set_prefixed(arif_SRC src/
   arifmainwindow.cpp
   foreman.cpp
   processing.cpp
+  videosources/interfaces.cpp
 )
 set_prefixed(arif_MOC src/
   glvideowidget.h
   arifmainwindow.h
   foreman.h
+  videosources/interfaces.h
 )
 qt4_wrap_cpp(arif_MOC_MOCD
   ${arif_MOC}
