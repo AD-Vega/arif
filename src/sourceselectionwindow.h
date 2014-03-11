@@ -16,27 +16,28 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#include <QtGui/QApplication>
-#include "sourceselectionwindow.h"
-#include "arifmainwindow.h"
-#include "videosources/interfaces.h"
+#ifndef SOURCESELECTIONWINDOW_H
+#define SOURCESELECTIONWINDOW_H
 
-int main(int argc, char* argv[])
+#include "videosources/interfaces.h"
+#include <QComboBox>
+#include <QDialog>
+
+class SourceSelectionWindow: public QDialog
 {
-    QApplication a(argc, argv);
-    QCoreApplication::setOrganizationDomain("ad-vega.si");
-    QCoreApplication::setOrganizationName("AD Vega");
-    QCoreApplication::setApplicationName("arif");
-    VideoSourcePlugin* plugin;
-    {
-        SourceSelectionWindow s;
-        s.exec();
-        plugin = s.result() == QDialog::Accepted ? s.selectedSource : nullptr;
-    }
-    if (plugin) {
-        ArifMainWindow w;
-        w.show();
-        return a.exec();
-    }
-    return 1;
-}
+    Q_OBJECT
+
+public:
+    explicit SourceSelectionWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    VideoSourcePlugin* selectedSource = nullptr;
+
+private slots:
+    void changeSource();
+    void saveLastPluginName();
+
+private:
+    QComboBox* selector;
+    VideoSourceConfigurationWidget* currentWidget = nullptr;
+};
+
+#endif

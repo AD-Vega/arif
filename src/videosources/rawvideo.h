@@ -43,6 +43,7 @@ class RawVideoSource: public QObject, public VideoSourcePlugin
 public:
     explicit RawVideoSource(QObject* parent = 0);
     QString name();
+    QString readableName();
     VideoSourceConfigurationWidget* createConfigurationWidget();
     SharedRawFrame createRawFrame();
     SharedDecoder createDecoder();

@@ -113,6 +113,7 @@ class VideoSourcePlugin
 public:
     virtual ~VideoSourcePlugin() {}
     virtual QString name() = 0;
+    virtual QString readableName() = 0;
     virtual VideoSourceConfigurationWidget* createConfigurationWidget() = 0;
     virtual SharedRawFrame createRawFrame() = 0;
     virtual SharedDecoder createDecoder() = 0;

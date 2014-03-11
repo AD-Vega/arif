@@ -192,8 +192,7 @@ RawSourceConfigWidget::RawSourceConfigWidget() :
 void RawSourceConfigWidget::checkConfig()
 {
     auto name = fileName->text();
-    if (name.isEmpty()) return;
-    if ((QFileInfo(name).isReadable())) {
+    if (QFileInfo(name).isReadable()) {
         RawVideoSource* s = RawVideoSource::instance;
         s->file = name;
         s->size = QSize(width->value(), height->value());
@@ -246,6 +245,11 @@ void RawSourceConfigWidget::restoreConfig()
 QString RawVideoSource::name()
 {
     return "RawVideo";
+}
+
+QString RawVideoSource::readableName()
+{
+    return "Raw video file";
 }
 
 VideoSourceConfigurationWidget* RawVideoSource::createConfigurationWidget()
