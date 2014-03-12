@@ -63,6 +63,7 @@ private:
     friend class RawSourceConfigWidget;
     friend class RawVideoFrame;
     friend class RawVideoReader;
+    friend class RawVideoDecoder;
 };
 
 class RawSourceConfigWidget : public VideoSourceConfigurationWidget
@@ -104,6 +105,7 @@ private:
 class RawVideoDecoder: public Decoder
 {
 public:
+    RawVideoDecoder();
     const cv::Mat decode(RawFrame* in);
     VideoSourcePlugin* format();
 

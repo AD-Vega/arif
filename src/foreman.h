@@ -21,10 +21,20 @@
 
 #include "processing.h"
 #include <QThreadPool>
+#include <QFutureWatcher>
+#include <QList>
 
 class Foreman: public QObject
 {
     Q_OBJECT
+
+    // This struct combines a future with its watcher and automatically
+    // connects the parent Foreman to its finished() signal.
+    struct FutureData {
+        FutureData(Foreman* parent, QFuture<SharedData> future);
+        QFuture<SharedData> future;
+        QSharedPointer<QFutureWatcher<SharedData>> watcher;
+    };
 
 public:
     explicit Foreman(const ProcessingSettings& settings,
@@ -33,17 +43,23 @@ public:
 public slots:
     // Foreman always accepts frames so it can render them,
     // but will not do other processing unless started.
-    // Settings are updated by restarting.
-    void start(const ProcessingSettings& settings);
+    void start();
 
     // Returns immediately, a signal is emmited when actually stopped.
     void stop();
+
+    // Updates the shared pointer, which is put into SharedData when
+    // starting a new cycle.
+    void updateSettings(const ProcessingSettings& settings);
 
     // Called by main window when a new frame should be shown.
     void renderNextFrame();
 
     // Invoked when a new frame is ready.
-    void takeFrame(QSharedPointer<RawFrame> frame);
+    void takeFrame(SharedRawFrame frame);
+
+    // Invoked when a processing stage has completed.
+    void stageComplete();
 
 signals:
     // Emitted when a renderNextFrame() request completes.
@@ -57,12 +73,16 @@ signals:
     void stopped();
 
 private:
+    bool haveIdleThreads();
+
+private:
     bool quit = false;
+    bool started = false;
     bool render = false;
-    QThreadPool* threadPool = QThreadPool::globalInstance();
     QSharedPointer<ProcessingSettings> settings;
-    QList<QSharedPointer<Decoder>> decoderPool;
-    QSharedPointer<RawFrame> cachedFrame;
+    QList<SharedData> dataPool;
+    QList<FutureData> futures;
+    SharedRawFrame cachedFrame;
 };
 
 #endif

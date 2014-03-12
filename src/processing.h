@@ -25,24 +25,32 @@
 #include <QList>
 #include <QRect>
 #include <QImage>
+#include <QRunnable>
 #include <opencv2/core/core.hpp>
-
-class ProcessingData;
-
-typedef void (*ProcessingFunction) (ProcessingData*);
 
 enum class ProcessingStage
 {
-    DecodeAndCrop,
+    Decode,
+    Crop,
     EstimateQuality,
     RenderFrame, // When requested by main window.
 };
 
-void DecodeAndCrop(ProcessingData* d);
-void EstimateQuality(ProcessingData* d);
-void RenderFrame(ProcessingData* d);
+class ProcessingData;
+typedef QSharedPointer<ProcessingData> SharedData;
+
+// A processing function returns the data it worked on so that
+// it can be used effectively with QtConcurrent.
+typedef SharedData (*ProcessingFunction) (SharedData);
+
+SharedData DecodeStage(SharedData d);
+SharedData CropStage(SharedData d);
+SharedData EstimateQualityStage(SharedData d);
+SharedData RenderStage(SharedData d);
 
 struct ProcessingSettings {
+    // This will never be changed once the source is chosen
+    VideoSourcePlugin* plugin;
     // DecodeAndCrop
     uint cropWidth;
     // RenderFrame
@@ -51,14 +59,18 @@ struct ProcessingSettings {
     bool logarithmicHistograms;
 };
 
+struct Histograms {
+  float red[256], green[256], blue[256];
+};
+
 /*
  * A pointer to this struct is given to a processing stage.
  * A stages are ordered, so each can count on the data from
  * the previous stage. It will fill the data fields that it
  * computes. These structs are reused to avoid memory churn,
  * thus stages shoud reuse cv::Mat memory and similar.
- * The Foreman is supposed to (re)initialize the appropriate
- * fields.
+ * reset() will (re)initialize the appropriate fields for reuse,
+ * the rest (such as decoder) is Foreman's responsibility.
  */
 struct ProcessingData {
     // A stage will use these for error handling.
@@ -69,24 +81,30 @@ struct ProcessingData {
     // Settings are reference-counted to allow Foreman
     // to change settings for new instances.
     QSharedPointer<ProcessingSettings> settings;
-    // Foreman will assign the decoder from a pool and will
-    // take it back in the end.
-    QSharedPointer<Decoder> decoder;
+    SharedDecoder decoder;
+    SharedRawFrame rawFrame;
 
-    // Automatically deallocate raw frame when done.
-    QScopedPointer<RawFrame> rawFrame;
+    // Decode
+    cv::Mat decoded;      // Any format
+    cv::Mat decodedFloat; // CV_32FC
+    cv::Mat grayscale;    // CV_32FC
 
-    // DecodeAndCrop
-    cv::Mat decoded;
-    cv::Mat cropped; // Can reference same data as ::decoded
+    // Crop
     QRect cropArea;
+    cv::Rect cvCropArea;
 
     // EstimateQuality
     float quality;
 
     // RenderFrame
+    cv::Mat temporary;
     QImage renderedFrame;
     QSharedPointer<Histograms> histograms;
+
+    void reset(QSharedPointer<ProcessingSettings> s) {
+        completedStages.clear();
+        settings = s;
+    }
 };
 
 #endif

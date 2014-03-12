@@ -67,6 +67,14 @@ void RawVideoFrame::load(QDataStream& s)
     RawFrame::load(s);
 }
 
+RawVideoDecoder::RawVideoDecoder()
+{
+    auto s = RawVideoSource::instance;
+    auto d = QArvDecoder::makeSwScaleDecoder(s->pixfmt, s->frameSize(),
+             SWS_FAST_BILINEAR | SWS_BITEXACT);
+    thedecoder.reset(d);
+}
+
 VideoSourcePlugin* RawVideoDecoder::format()
 {
     return RawVideoSource::instance;

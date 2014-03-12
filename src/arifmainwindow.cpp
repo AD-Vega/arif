@@ -20,11 +20,14 @@
 #include <QTimer>
 #include <QSettings>
 
+#include <QDebug>
+
 ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
                                QWidget* parent,
                                Qt::WindowFlags flags):
-    QMainWindow(parent, flags), sourcePlugin(plugin)
+    QMainWindow(parent, flags)
 {
+    settings.plugin = plugin;
     setupUi(this);
     restoreProgramSettings();
     // Delay initialization until a later event loop cycle.
@@ -33,7 +36,33 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
 
 void ArifMainWindow::initialize()
 {
-    
+    settings.computeHistograms = false;
+    settings.cropWidth = cropWidthBox->value();
+    settings.logarithmicHistograms = false;
+    settings.markClipped = false;
+    foreman.reset(new Foreman(settings));
+    settings.plugin->reader();
+    connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
+            foreman.data(), SLOT(takeFrame(SharedRawFrame)));
+    connect(foreman.data(), SIGNAL(ready()),
+            settings.plugin->reader(), SLOT(readFrame()));
+    // TODO connect error signal
+    connect(foreman.data(),
+            SIGNAL(frameRendered(QImage, QSharedPointer<Histograms>)),
+            SLOT(displayRenderedFrame(QImage, QSharedPointer<Histograms>)));
+    // Read a frame and render it. If this is a file, go back to beginning.
+    foreman->renderNextFrame();
+    settings.plugin->reader()->readFrame();
+    settings.plugin->reader()->seek(0);
+}
+
+void ArifMainWindow::displayRenderedFrame(QImage image,
+                                          QSharedPointer<Histograms>  histograms)
+{
+    // The provided image is actually in the foreman's ProcessingData.
+    // Just swap it with the one currently rendered.
+    videoWidget->unusedFrame()->swap(image);
+    videoWidget->swapFrames();
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)

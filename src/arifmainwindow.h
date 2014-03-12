@@ -34,6 +34,7 @@ public:
 
 private slots:
     void initialize();
+    void displayRenderedFrame(QImage image,QSharedPointer<Histograms> histograms);
 
 private:
     void closeEvent(QCloseEvent* event);
@@ -41,7 +42,6 @@ private:
     void restoreProgramSettings();
 
 private:
-    VideoSourcePlugin* sourcePlugin;
     ProcessingSettings settings;
     QScopedPointer<Foreman> foreman;
 };

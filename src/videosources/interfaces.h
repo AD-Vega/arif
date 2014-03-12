@@ -26,9 +26,6 @@
 #include <QGroupBox>
 #include <opencv2/core/core.hpp>
 
-// STUBS
-struct Histograms {};
-
 class VideoSourcePlugin;
 class RawFrame;
 class Decoder;
