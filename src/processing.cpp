@@ -18,7 +18,6 @@
 
 #include "processing.h"
 #include <opencv2/imgproc/imgproc.hpp>
-#include <qarvdecoder.h>
 
 SharedData DecodeStage(SharedData d)
 {
@@ -109,7 +108,7 @@ void renderFrame(const cv::Mat frame, QImage* image_, bool markClipped = false,
           if (hists)
             histograms[px][tmp]++;
           clipped = clipped || tmp == 255;
-          imgLine[4*j + px] = tmp;
+          imgLine[4*j + 2 - px] = tmp;
         }
         imgLine[4*j + 3] = 255;
         if (clipped && markClipped) {
@@ -156,33 +155,31 @@ void renderFrame(const cv::Mat frame, QImage* image_, bool markClipped = false,
 SharedData RenderStage(SharedData d)
 {
     d->completedStages << ProcessingStage::RenderFrame;
-//     void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
-//     cv::Mat* M = &d->decoded;
-//     switch (d->decoded.type()) {
-//     case CV_16UC1:
-//         theFunc = renderFrame<true, false>;
-//         break;
-//     case CV_16UC3:
-//         theFunc = renderFrame<false, false>;
-//         break;
-//     case CV_8UC1:
-//         theFunc = renderFrame<true, true>;
-//         break;
-//     case CV_8UC3:
-//         theFunc = renderFrame<false, true>;
-//         break;
-//     default:
-//         d->decoded.convertTo(d->temporary, CV_8U);
-//         M = &d->temporary;
-//         theFunc = d->decoded.channels() > 1 ?
-//                   renderFrame<false, true> :
-//                   renderFrame<true, true>;
-//     }
-//     theFunc(*M, &d->renderedFrame, d->settings->markClipped,
-//             d->settings->computeHistograms ? d->histograms.data() : nullptr,
-//             d->settings->logarithmicHistograms);
-    QArvDecoder::CV2QImage_RGB24(d->decoded, d->renderedFrame);
-    // TODO the premultiplied stuff doesn't work. needs fixing in qarv too.
+    void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
+    cv::Mat* M = &d->decoded;
+    switch (d->decoded.type()) {
+    case CV_16UC1:
+        theFunc = renderFrame<true, false>;
+        break;
+    case CV_16UC3:
+        theFunc = renderFrame<false, false>;
+        break;
+    case CV_8UC1:
+        theFunc = renderFrame<true, true>;
+        break;
+    case CV_8UC3:
+        theFunc = renderFrame<false, true>;
+        break;
+    default:
+        d->decoded.convertTo(d->temporary, CV_8U);
+        M = &d->temporary;
+        theFunc = d->decoded.channels() > 1 ?
+                  renderFrame<false, true> :
+                  renderFrame<true, true>;
+    }
+    theFunc(*M, &d->renderedFrame, d->settings->markClipped,
+            d->settings->computeHistograms ? d->histograms.data() : nullptr,
+            d->settings->logarithmicHistograms);
     d->stageSuccessful = true;
     d->errorMessage.clear();
     return d;
