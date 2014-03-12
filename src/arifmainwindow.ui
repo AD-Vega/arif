@@ -34,52 +34,6 @@
            <property name="fieldGrowthPolicy">
             <enum>QFormLayout::ExpandingFieldsGrow</enum>
            </property>
-           <item row="7" column="0" colspan="2">
-            <widget class="QFrame" name="imageDestinationBox">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <layout class="QVBoxLayout" name="verticalLayout_2">
-              <item>
-               <widget class="QLabel" name="label_5">
-                <property name="text">
-                 <string>Image destination directory:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <layout class="QHBoxLayout" name="horizontalLayout">
-                <item>
-                 <widget class="QLineEdit" name="imageDestinationDirectory"/>
-                </item>
-                <item>
-                 <widget class="QPushButton" name="imageDestinationButton">
-                  <property name="icon">
-                   <iconset theme="document-open">
-                    <normaloff/>
-                   </iconset>
-                  </property>
-                 </widget>
-                </item>
-               </layout>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="0">
-            <widget class="QLabel" name="blackLevelLabel">
-             <property name="text">
-              <string>Black level:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QSpinBox" name="blackLevelBox">
-             <property name="maximum">
-              <number>255</number>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="0">
             <widget class="QLabel" name="cropWidthLabel">
              <property name="text">
@@ -100,28 +54,64 @@
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
-            <widget class="QCheckBox" name="showEveryFrameCheck"/>
-           </item>
-           <item row="5" column="1">
-            <widget class="QCheckBox" name="writeImagesCheck">
-             <property name="text">
-              <string/>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
+           <item row="3" column="0">
             <widget class="QLabel" name="label_19">
              <property name="text">
               <string>Display every frame</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
+           <item row="3" column="1">
+            <widget class="QCheckBox" name="showEveryFrameCheck"/>
+           </item>
+           <item row="4" column="0">
             <widget class="QLabel" name="label_18">
              <property name="text">
               <string>Save images</string>
              </property>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QCheckBox" name="writeImagesCheck">
+             <property name="text">
+              <string/>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="0" colspan="2">
+            <widget class="QFrame" name="imageDestinationBox">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <layout class="QVBoxLayout" name="verticalLayout_2">
+              <item>
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>Image destination directory:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <layout class="QHBoxLayout" name="horizontalLayout">
+                <item>
+                 <widget class="QLineEdit" name="imageDestinationDirectory">
+                  <property name="enabled">
+                   <bool>true</bool>
+                  </property>
+                 </widget>
+                </item>
+                <item>
+                 <widget class="QPushButton" name="imageDestinationButton">
+                  <property name="icon">
+                   <iconset theme="document-open">
+                    <normaloff/>
+                   </iconset>
+                  </property>
+                 </widget>
+                </item>
+               </layout>
+              </item>
+             </layout>
             </widget>
            </item>
           </layout>
@@ -184,7 +174,6 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>cropWidthBox</tabstop>
-  <tabstop>blackLevelBox</tabstop>
   <tabstop>showEveryFrameCheck</tabstop>
   <tabstop>writeImagesCheck</tabstop>
   <tabstop>imageDestinationDirectory</tabstop>
@@ -214,7 +203,4 @@
  <slots>
   <slot>workerConfigurationComplete()</slot>
  </slots>
- <buttongroups>
-  <buttongroup name="filteringModeButtons"/>
- </buttongroups>
 </ui>

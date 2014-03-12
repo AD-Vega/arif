@@ -36,6 +36,11 @@ private slots:
     void initialize();
 
 private:
+    void closeEvent(QCloseEvent* event);
+    void saveProgramSettings();
+    void restoreProgramSettings();
+
+private:
     VideoSourcePlugin* sourcePlugin;
     ProcessingSettings settings;
     QScopedPointer<Foreman> foreman;

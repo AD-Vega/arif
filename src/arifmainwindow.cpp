@@ -18,6 +18,7 @@
 
 #include "arifmainwindow.h"
 #include <QTimer>
+#include <QSettings>
 
 ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
                                QWidget* parent,
@@ -25,11 +26,36 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
     QMainWindow(parent, flags), sourcePlugin(plugin)
 {
     setupUi(this);
+    restoreProgramSettings();
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));
 }
 
 void ArifMainWindow::initialize()
 {
+    
+}
 
+void ArifMainWindow::closeEvent(QCloseEvent* event)
+{
+    saveProgramSettings();
+    QWidget::closeEvent(event);
+}
+
+void ArifMainWindow::saveProgramSettings()
+{
+    QSettings config;
+    config.setValue("mainwindow/geometry", saveGeometry());
+    config.setValue("mainwindow/state", saveState());
+    config.setValue("processing/cropwidth", cropWidthBox->value());
+    config.setValue("processing/saveimages", imageDestinationDirectory->text());
+}
+
+void ArifMainWindow::restoreProgramSettings()
+{
+    QSettings config;
+    restoreGeometry(config.value("mainwindow/geometry").toByteArray());
+    restoreState(config.value("mainwindow/state").toByteArray());
+    cropWidthBox->setValue(config.value("processing/cropwidth").toInt());
+    imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
 }
