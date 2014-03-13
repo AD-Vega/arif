@@ -18,6 +18,21 @@
 
 #include "processing.h"
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/highgui/highgui.hpp>
+
+void DecodeStage(SharedData d);
+void CropStage(SharedData d);
+void EstimateQualityStage(SharedData d);
+void RenderStage(SharedData d);
+void SaveStage(SharedData d);
+
+static void (*stages[])(SharedData) = {
+    DecodeStage,
+    CropStage,
+    EstimateQualityStage,
+    SaveStage,
+    RenderStage
+};
 
 static QStringList initStagesList()
 {
@@ -25,22 +40,11 @@ static QStringList initStagesList()
     list << "Decode"
          << "Crop"
          << "EstimateQuality"
+         << "Save"
          << "Render";
 }
 
 const QStringList processingStages = initStagesList();
-
-void DecodeStage(SharedData d);
-void CropStage(SharedData d);
-void EstimateQualityStage(SharedData d);
-void RenderStage(SharedData d);
-
-static void (*stages[])(SharedData) = {
-    DecodeStage,
-    CropStage,
-    EstimateQualityStage,
-    RenderStage
-};
 
 SharedData processData(SharedData data)
 {
@@ -238,4 +242,31 @@ void EstimateQualityStage(SharedData d)
     }
     d->stageSuccessful = true;
     d->errorMessage.clear();
+}
+
+void SaveStage(SharedData d)
+{
+    if (!d->settings->saveImages) {
+        d->stageSuccessful = true;
+        d->errorMessage.clear();
+        return;
+    }
+    d->completedStages << "Save";
+    if (d->settings->saveImages) {
+        auto& meta = d->rawFrame->metaData;
+        QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
+        QString filename = fnTemplate
+                           .arg(d->settings->saveImagesDirectory)
+                           .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
+                           .arg(meta.frameOfSecond, 3, 10, QChar('0'))
+                           .arg(d->quality, 0, 'g', 4);
+        std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
+        d->stageSuccessful = cv::imwrite(filename.toStdString(),
+                                         d->decoded(d->cvCropArea),
+                                         option);
+        if (!d->stageSuccessful)
+            d->errorMessage = "filename " + filename;
+        else
+            d->errorMessage.clear();
+    }
 }
