@@ -31,10 +31,9 @@ bool Foreman::FutureData::operator==(const Foreman::FutureData& other) const
     return future == other.future && watcher == other.watcher;
 }
 
-Foreman::Foreman(const ProcessingSettings& settings_, QObject* parent):
-    QObject(parent), settings(new ProcessingSettings)
+Foreman::Foreman(QObject* parent):
+    QObject(parent)
 {
-    *settings = settings_;
 }
 
 void Foreman::start()
@@ -50,9 +49,10 @@ void Foreman::stop()
         emit stopped();
 }
 
-void Foreman::updateSettings(const ProcessingSettings& settings)
+void Foreman::updateSettings(const ProcessingSettings& settings_)
 {
-
+    settings = QSharedPointer<ProcessingSettings>(new ProcessingSettings);
+    *settings = settings_;
 }
 
 void Foreman::renderNextFrame()

@@ -37,11 +37,14 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
 
 void ArifMainWindow::initialize()
 {
-    settings.computeHistograms = false;
-    settings.cropWidth = cropWidthBox->value();
-    settings.logarithmicHistograms = false;
-    settings.markClipped = false;
-    foreman.reset(new Foreman(settings));
+    // Connect widgets that can update settings.
+    connect(noiseSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
+    connect(signalSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
+    connect(cropWidthBox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
+
+    // Prepare the processing pipeline and start displaying frames.
+    foreman.reset(new Foreman);
+    updateSettings();
     settings.plugin->reader();
     connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
             foreman.data(), SLOT(takeFrame(SharedRawFrame)));
@@ -109,6 +112,17 @@ void ArifMainWindow::readerFinished()
     processButton->setChecked(false);
 }
 
+void ArifMainWindow::updateSettings()
+{
+    settings.computeHistograms = false;
+    settings.cropWidth = cropWidthBox->value();
+    settings.logarithmicHistograms = false;
+    settings.markClipped = false;
+    settings.noiseSigma = noiseSigmaSpinbox->value();
+    settings.signalSigma = signalSigmaSpinbox->value();
+    foreman->updateSettings(settings);
+}
+
 void ArifMainWindow::closeEvent(QCloseEvent* event)
 {
     saveProgramSettings();
@@ -123,6 +137,8 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("mainwindow/displayinterval", displayInterval->value());
     config.setValue("processing/cropwidth", cropWidthBox->value());
     config.setValue("processing/saveimages", imageDestinationDirectory->text());
+    config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
+    config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
 }
 
 void ArifMainWindow::restoreProgramSettings()
@@ -130,7 +146,9 @@ void ArifMainWindow::restoreProgramSettings()
     QSettings config;
     restoreGeometry(config.value("mainwindow/geometry").toByteArray());
     restoreState(config.value("mainwindow/state").toByteArray());
-    displayInterval->setValue(config.value("mainwindow/displayinterval").toInt());
-    cropWidthBox->setValue(config.value("processing/cropwidth").toInt());
+    displayInterval->setValue(config.value("mainwindow/displayinterval", 1).toInt());
+    cropWidthBox->setValue(config.value("processing/cropwidth", 100).toInt());
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
+    noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
+    signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
 }

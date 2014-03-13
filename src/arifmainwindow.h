@@ -39,10 +39,10 @@ private slots:
     void foremanStopped();
     void readerError(QString error);
     void readerFinished();
+    void updateSettings();
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);
-
 
 private:
     void closeEvent(QCloseEvent* event);

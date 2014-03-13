@@ -192,11 +192,15 @@ SharedData EstimateQualityStage(SharedData d)
                      cv::Size(0, 0), d->settings->noiseSigma);
     cv::GaussianBlur(d->blurNoise, d->blurSignal,
                      cv::Size(0, 0), d->settings->signalSigma);
-    double noise = cv::norm(d->decodedFloat, d->blurNoise);
-    double signal = cv::norm(d->blurNoise, d->blurSignal);
-    d->quality = noise > 0 ? signal/noise : 0;
-    // Use square for backwards compatibility.
-    d->quality = d->quality * d->quality;
+    cv::subtract(d->blurNoise, d->blurSignal, d->blurSignal);
+    cv::subtract(d->decodedFloat, d->blurNoise, d->blurNoise);
+    double noise = d->blurNoise.dot(d->blurNoise);
+    if (noise == 0) {
+        d->quality = 0;
+    } else {
+        double signal = d->blurSignal.dot(d->blurSignal);
+        d->quality = signal / noise;
+    }
     d->stageSuccessful = true;
     d->errorMessage.clear();
     return d;

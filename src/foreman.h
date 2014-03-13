@@ -38,8 +38,8 @@ class Foreman: public QObject
     };
 
 public:
-    explicit Foreman(const ProcessingSettings& settings,
-                     QObject* parent = 0);
+    // Call updateSettings before use!
+    explicit Foreman(QObject* parent = 0);
 
 public slots:
     // Foreman always accepts frames so it can render them,
