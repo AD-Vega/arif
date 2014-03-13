@@ -93,6 +93,7 @@ RawVideoReader::RawVideoReader():
 {
     file.open(QIODevice::ReadOnly);
     live = sequential = false; // TODO
+    file.seek(RawVideoSource::instance->headerBytes);
 }
 
 VideoSourcePlugin* RawVideoReader::format()
