@@ -18,6 +18,7 @@
 
 #include "foreman.h"
 #include <QtConcurrentRun>
+#include <opencv2/highgui/highgui.hpp>
 
 Foreman::FutureData::FutureData(Foreman* parent, QFuture<SharedData> future_):
     future(future_), watcher(new QFutureWatcher<SharedData>)
@@ -105,6 +106,26 @@ void Foreman::stageComplete()
                 futures << FutureData(this, QtConcurrent::run(EstimateQualityStage, d));
                 break;
             case ProcessingStage::EstimateQuality:
+                if (settings->saveImages) {
+                    auto& meta = d->rawFrame->metaData;
+                    QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
+                    QString filename = fnTemplate
+                                       .arg(settings->saveImagesDirectory)
+                                       .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
+                                       .arg(meta.frameOfSecond, 3, 10, QChar('0'))
+                                       .arg(d->quality, 0, 'g', 4);
+                    bool written = cv::imwrite(filename.toStdString(),
+                                               d->decoded(d->cvCropArea),
+                                               { CV_IMWRITE_PXM_BINARY, 1});
+                    if (!written) {
+                        qDebug() << "Error writing image" << filename;
+                        qDebug() << "Writing disabled.";
+                        auto s = new ProcessingSettings;
+                        *s = *settings;
+                        s->saveImages = false;
+                        settings = QSharedPointer<ProcessingSettings>(s);
+                    }
+                }
                 // Last stage, request next frame
                 if (started)
                     emit ready();

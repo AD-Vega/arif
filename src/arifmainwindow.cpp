@@ -20,6 +20,7 @@
 #include <QTimer>
 #include <QSettings>
 #include <QMessageBox>
+#include <QFileDialog>
 
 #include <QDebug>
 
@@ -41,6 +42,7 @@ void ArifMainWindow::initialize()
     connect(noiseSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(signalSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(cropWidthBox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
+    connect(saveImagesCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -92,6 +94,14 @@ void ArifMainWindow::on_processButton_toggled(bool checked)
     }
 }
 
+void ArifMainWindow::on_imageDestinationButton_clicked(bool checked)
+{
+  auto dirname = QFileDialog::getExistingDirectory(this, "Open directory");
+  if (!dirname.isNull()) {
+    imageDestinationDirectory->setText(dirname);
+  }
+}
+
 void ArifMainWindow::foremanStopped()
 {
     processButton->setEnabled(true);
@@ -120,6 +130,9 @@ void ArifMainWindow::updateSettings()
     settings.markClipped = false;
     settings.noiseSigma = noiseSigmaSpinbox->value();
     settings.signalSigma = signalSigmaSpinbox->value();
+    settings.saveImages = saveImagesCheck->isChecked();
+    imageDestinationBox->setEnabled(!settings.saveImages);
+    settings.saveImagesDirectory = imageDestinationDirectory->text();
     foreman->updateSettings(settings);
 }
 

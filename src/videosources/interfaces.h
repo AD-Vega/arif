@@ -73,7 +73,7 @@ public:
     virtual quint64 numberOfFrames() = 0;
     virtual VideoSourcePlugin* format() = 0;
 
-private:
+protected:
     FrameMetaData makeMetaData();
 
 public slots:

@@ -59,6 +59,9 @@ struct ProcessingSettings {
     bool logarithmicHistograms;
     // EstimateQuality
     double noiseSigma, signalSigma;
+    // Other
+    bool saveImages;
+    QString saveImagesDirectory;
 };
 
 struct Histograms {

@@ -43,6 +43,7 @@ private slots:
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);
+    void on_imageDestinationButton_clicked(bool checked);
 
 private:
     void closeEvent(QCloseEvent* event);

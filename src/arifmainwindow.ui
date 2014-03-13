@@ -108,7 +108,7 @@
               <number>10000</number>
              </property>
              <property name="value">
-              <number>315</number>
+              <number>100</number>
              </property>
             </widget>
            </item>
@@ -120,7 +120,7 @@
             </widget>
            </item>
            <item row="3" column="1">
-            <widget class="QCheckBox" name="writeImagesCheck">
+            <widget class="QCheckBox" name="saveImagesCheck">
              <property name="text">
               <string/>
              </property>
@@ -250,31 +250,14 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>cropWidthBox</tabstop>
-  <tabstop>writeImagesCheck</tabstop>
+  <tabstop>saveImagesCheck</tabstop>
   <tabstop>imageDestinationDirectory</tabstop>
   <tabstop>imageDestinationButton</tabstop>
   <tabstop>processButton</tabstop>
   <tabstop>seekSlider</tabstop>
  </tabstops>
  <resources/>
- <connections>
-  <connection>
-   <sender>writeImagesCheck</sender>
-   <signal>clicked(bool)</signal>
-   <receiver>imageDestinationBox</receiver>
-   <slot>setEnabled(bool)</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>178</x>
-     <y>314</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>255</x>
-     <y>396</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
  <slots>
   <slot>workerConfigurationComplete()</slot>
  </slots>

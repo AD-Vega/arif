@@ -135,6 +135,7 @@ void RawVideoReader::readFrame()
             } else if (status < s->frameBytes) {
                 emit atEnd();
             } else {
+                frm->metaData = makeMetaData();
                 emit frameReady(frm);
             }
         } else {
