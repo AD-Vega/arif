@@ -76,7 +76,7 @@ void Foreman::takeFrame(SharedRawFrame frame)
         } else {
             data = SharedData(new ProcessingData);
             data->decoder = SharedDecoder(settings->plugin->createDecoder());
-            data->settings = settings;
+            data->reset(settings);
         }
         data->rawFrame = frame;
         data->doRender = render;
@@ -112,6 +112,7 @@ void Foreman::processingComplete()
                 emit frameRendered(d->renderedFrame, d->histograms);
 
             requestAnotherFrame();
+            dataPool << d;
         }
     }
     if (!started && futures.empty())
