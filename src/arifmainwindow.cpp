@@ -168,6 +168,9 @@ void ArifMainWindow::printActiveThreads()
 void ArifMainWindow::closeEvent(QCloseEvent* event)
 {
     saveProgramSettings();
+    foreman->stop();
+    while (foreman->isStarted())
+        QApplication::processEvents();
     QWidget::closeEvent(event);
 }
 

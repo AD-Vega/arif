@@ -34,18 +34,6 @@ static void (*stages[])(SharedData) = {
     RenderStage
 };
 
-static QStringList initStagesList()
-{
-    QStringList list;
-    list << "Decode"
-         << "Crop"
-         << "EstimateQuality"
-         << "Save"
-         << "Render";
-}
-
-const QStringList processingStages = initStagesList();
-
 SharedData processData(SharedData data)
 {
     for (int i = 0; i < sizeof(stages)/sizeof(void*); i++) {

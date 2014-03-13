@@ -28,8 +28,6 @@
 #include <QRunnable>
 #include <opencv2/core/core.hpp>
 
-extern const QStringList processingStages;
-
 class ProcessingData;
 typedef QSharedPointer<ProcessingData> SharedData;
 
