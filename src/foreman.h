@@ -77,6 +77,7 @@ signals:
 
 private:
     bool haveIdleThreads();
+    bool requestAnotherFrame();
 
 private:
     bool started = false;
@@ -84,7 +85,6 @@ private:
     QSharedPointer<ProcessingSettings> settings;
     QList<SharedData> dataPool;
     QList<FutureData> futures;
-    SharedRawFrame cachedFrame;
 };
 
 #endif

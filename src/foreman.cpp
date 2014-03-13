@@ -44,7 +44,7 @@ bool Foreman::isStarted()
 void Foreman::start()
 {
     started = true;
-    emit ready();
+    requestAnotherFrame();
 }
 
 void Foreman::stop()
@@ -82,10 +82,9 @@ void Foreman::takeFrame(SharedRawFrame frame)
         data->doRender = render;
         render = false;
         futures << FutureData(this, QtConcurrent::run(processData, data));
-
-        // Request another if there are free resources.
-        if (haveIdleThreads())
-            emit ready();
+        requestAnotherFrame();
+    } else {
+        qDebug() << "dropped frame";
     }
 }
 
@@ -106,17 +105,13 @@ void Foreman::processingComplete()
                     s->saveImages = false;
                     settings = QSharedPointer<ProcessingSettings>(s);
                 }
-                // Request another frame if there are free resources.
-                if (started && haveIdleThreads())
-                    emit ready();
+                requestAnotherFrame();
             }
 
             if (d->doRender)
                 emit frameRendered(d->renderedFrame, d->histograms);
 
-            // Request another frame if there are free resources.
-            if (started && haveIdleThreads())
-                emit ready();
+            requestAnotherFrame();
         }
     }
     if (!started && futures.empty())
@@ -129,3 +124,9 @@ bool Foreman::haveIdleThreads()
     return p->activeThreadCount() < p->maxThreadCount();
 }
 
+bool Foreman::requestAnotherFrame()
+{
+    if (started && haveIdleThreads()) {
+        emit ready();
+    }
+}
