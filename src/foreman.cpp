@@ -23,7 +23,7 @@
 Foreman::FutureData::FutureData(Foreman* parent, QFuture<SharedData> future_):
     future(future_), watcher(new QFutureWatcher<SharedData>)
 {
-    connect(watcher.data(), SIGNAL(finished()), parent, SLOT(stageComplete()));
+    connect(watcher.data(), SIGNAL(finished()), parent, SLOT(processingComplete()));
     watcher->setFuture(future);
 }
 
@@ -80,7 +80,9 @@ void Foreman::takeFrame(SharedRawFrame frame)
             data->settings = settings;
         }
         data->rawFrame = frame;
-        futures << FutureData(this, QtConcurrent::run(DecodeStage, data));
+        data->doRender = render;
+        render = false;
+        futures << FutureData(this, QtConcurrent::run(processData, data));
 
         // Request another if there are free resources.
         if (haveIdleThreads())
@@ -88,65 +90,49 @@ void Foreman::takeFrame(SharedRawFrame frame)
     }
 }
 
-void Foreman::stageComplete()
+void Foreman::processingComplete()
 {
     foreach (const FutureData& f, futures) {
         if (f.watcher->isFinished()) {
             SharedData d = f.watcher->result();
             futures.removeOne(f);
             if (!d->stageSuccessful) {
-                qDebug() << "Processing stage failed:" << d->errorMessage;
-                if (started)
-                    emit ready();
-            }
-            auto previousStage = d->completedStages.last();
-            // Always run; even if there are no free threads now,
-            // they will appear sooner or later.
-            switch (previousStage) {
-            case ProcessingStage::Decode:
-                if (started) {
-                    futures << FutureData(this, QtConcurrent::run(CropStage, d));
-                } else if (render) {
-                    render = false;
-                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
-                }
-                break;
-            case ProcessingStage::Crop:
-                futures << FutureData(this, QtConcurrent::run(EstimateQualityStage, d));
-                break;
-            case ProcessingStage::EstimateQuality:
-                if (settings->saveImages) {
-                    auto& meta = d->rawFrame->metaData;
-                    QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
-                    QString filename = fnTemplate
-                                       .arg(settings->saveImagesDirectory)
-                                       .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
-                                       .arg(meta.frameOfSecond, 3, 10, QChar('0'))
-                                       .arg(d->quality, 0, 'g', 4);
-                    bool written = cv::imwrite(filename.toStdString(),
-                                               d->decoded(d->cvCropArea),
-                                               { CV_IMWRITE_PXM_BINARY, 1});
-                    if (!written) {
-                        qDebug() << "Error writing image" << filename;
-                        qDebug() << "Writing disabled.";
-                        auto s = new ProcessingSettings;
-                        *s = *settings;
-                        s->saveImages = false;
-                        settings = QSharedPointer<ProcessingSettings>(s);
-                    }
-                }
-                // Last stage, request another frame if there are free resources.
+                auto previousStage = d->completedStages.last();
+                QString msg("Processing stage %1 failed:");
+                qDebug() << msg.arg(previousStage) << d->errorMessage;
+                // Request another frame if there are free resources.
                 if (started && haveIdleThreads())
                     emit ready();
-                if (render) {
-                    render = false;
-                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
-                }
-                break;
-            case ProcessingStage::RenderFrame:
-                emit frameRendered(d->renderedFrame, d->histograms);
-                break;
             }
+
+            if (settings->saveImages) {
+                auto& meta = d->rawFrame->metaData;
+                QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
+                QString filename = fnTemplate
+                                   .arg(settings->saveImagesDirectory)
+                                   .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
+                                   .arg(meta.frameOfSecond, 3, 10, QChar('0'))
+                                   .arg(d->quality, 0, 'g', 4);
+                std::vector<int> option({ CV_IMWRITE_PXM_BINARY, 1 });
+                bool written = cv::imwrite(filename.toStdString(),
+                                           d->decoded(d->cvCropArea),
+                                           option);
+                if (!written) {
+                    qDebug() << "Error writing image" << filename;
+                    qDebug() << "Writing disabled.";
+                    auto s = new ProcessingSettings;
+                    *s = *settings;
+                    s->saveImages = false;
+                    settings = QSharedPointer<ProcessingSettings>(s);
+                }
+            }
+
+            if (d->doRender)
+                emit frameRendered(d->renderedFrame, d->histograms);
+
+            // Request another frame if there are free resources.
+            if (started && haveIdleThreads())
+                emit ready();
         }
     }
     if (!started && futures.empty())

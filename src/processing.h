@@ -28,25 +28,13 @@
 #include <QRunnable>
 #include <opencv2/core/core.hpp>
 
-enum class ProcessingStage
-{
-    Decode,
-    Crop,
-    EstimateQuality,
-    RenderFrame, // When requested by main window.
-};
+extern const QStringList processingStages;
 
 class ProcessingData;
 typedef QSharedPointer<ProcessingData> SharedData;
 
-// A processing function returns the data it worked on so that
-// it can be used effectively with QtConcurrent.
-typedef SharedData (*ProcessingFunction) (SharedData);
-
-SharedData DecodeStage(SharedData d);
-SharedData CropStage(SharedData d);
-SharedData EstimateQualityStage(SharedData d);
-SharedData RenderStage(SharedData d);
+// Call this using QtConcurrent::run().
+SharedData processData(SharedData data);
 
 struct ProcessingSettings {
     // This will never be changed once the source is chosen
@@ -82,7 +70,7 @@ struct ProcessingData {
     bool stageSuccessful;
     QString errorMessage;
 
-    QList<ProcessingStage> completedStages;
+    QStringList completedStages;
     // Settings are reference-counted to allow Foreman
     // to change settings for new instances.
     QSharedPointer<ProcessingSettings> settings;
@@ -103,6 +91,7 @@ struct ProcessingData {
     float quality;
 
     // RenderFrame
+    bool doRender;
     cv::Mat renderTemporary;
     QImage renderedFrame;
     QSharedPointer<Histograms> histograms;
@@ -110,6 +99,7 @@ struct ProcessingData {
     void reset(QSharedPointer<ProcessingSettings> s) {
         completedStages.clear();
         settings = s;
+        doRender = false;
     }
 };
 

@@ -60,8 +60,9 @@ public slots:
     // Invoked when a new frame is ready.
     void takeFrame(SharedRawFrame frame);
 
+private slots:
     // Invoked when a processing stage has completed.
-    void stageComplete();
+    void processingComplete();
 
 signals:
     // Emitted when a renderNextFrame() request completes.
@@ -78,7 +79,6 @@ private:
     bool haveIdleThreads();
 
 private:
-    bool quit = false;
     bool started = false;
     bool render = false;
     QSharedPointer<ProcessingSettings> settings;

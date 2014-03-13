@@ -19,9 +19,42 @@
 #include "processing.h"
 #include <opencv2/imgproc/imgproc.hpp>
 
-SharedData DecodeStage(SharedData d)
+static QStringList initStagesList()
 {
-    d->completedStages << ProcessingStage::Decode;
+    QStringList list;
+    list << "Decode"
+         << "Crop"
+         << "EstimateQuality"
+         << "Render";
+}
+
+const QStringList processingStages = initStagesList();
+
+void DecodeStage(SharedData d);
+void CropStage(SharedData d);
+void EstimateQualityStage(SharedData d);
+void RenderStage(SharedData d);
+
+static void (*stages[])(SharedData) = {
+    DecodeStage,
+    CropStage,
+    EstimateQualityStage,
+    RenderStage
+};
+
+SharedData processData(SharedData data)
+{
+    for (int i = 0; i < sizeof(stages)/sizeof(void*); i++) {
+        stages[i](data);
+        if (!data->stageSuccessful)
+            return data;
+    }
+    return data;
+}
+
+void DecodeStage(SharedData d)
+{
+    d->completedStages << "Decode";
     d->decoded = d->decoder->decode(d->rawFrame.data());
     if (d->decoded.type() != CV_32F)
         d->decoded.convertTo(d->decodedFloat, CV_32F);
@@ -33,12 +66,11 @@ SharedData DecodeStage(SharedData d)
         d->grayscale = d->decodedFloat;
     d->stageSuccessful = true;
     d->errorMessage.clear();
-    return d;
 }
 
-SharedData CropStage(SharedData d)
+void CropStage(SharedData d)
 {
-    d->completedStages << ProcessingStage::Crop;
+    d->completedStages << "Crop";
     float sum = 0, x = 0, y = 0;
     const cv::Mat& m = d->grayscale;
     for (int i = 0; i < m.rows; i++) {
@@ -69,7 +101,6 @@ SharedData CropStage(SharedData d)
         d->stageSuccessful = true;
         d->errorMessage.clear();
     }
-    return d;
 }
 
 // Imported from QArvMainWindow
@@ -152,9 +183,14 @@ void renderFrame(const cv::Mat frame, QImage* image_, bool markClipped = false,
 }
 
 
-SharedData RenderStage(SharedData d)
+void RenderStage(SharedData d)
 {
-    d->completedStages << ProcessingStage::RenderFrame;
+    if (!d->doRender) {
+        d->stageSuccessful = true;
+        d->errorMessage.clear();
+        return;
+    }
+    d->completedStages << "Render";
     void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
     cv::Mat* M = &d->decoded;
     switch (M->type()) {
@@ -182,12 +218,11 @@ SharedData RenderStage(SharedData d)
             d->settings->logarithmicHistograms);
     d->stageSuccessful = true;
     d->errorMessage.clear();
-    return d;
 }
 
-SharedData EstimateQualityStage(SharedData d)
+void EstimateQualityStage(SharedData d)
 {
-    d->completedStages << ProcessingStage::EstimateQuality;
+    d->completedStages << "EstimateQuality";
     cv::GaussianBlur(d->decodedFloat, d->blurNoise,
                      cv::Size(0, 0), d->settings->noiseSigma);
     cv::GaussianBlur(d->blurNoise, d->blurSignal,
@@ -203,5 +238,4 @@ SharedData EstimateQualityStage(SharedData d)
     }
     d->stageSuccessful = true;
     d->errorMessage.clear();
-    return d;
 }
