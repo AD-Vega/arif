@@ -34,6 +34,13 @@ typedef QSharedPointer<ProcessingData> SharedData;
 // Call this using QtConcurrent::run().
 SharedData processData(SharedData data);
 
+enum class QualityFilterType
+{
+    None,
+    MinimumQuality,
+    AcceptanceRate
+};
+
 struct ProcessingSettings {
     // This will never be changed once the source is chosen
     VideoSourcePlugin* plugin;
@@ -45,9 +52,14 @@ struct ProcessingSettings {
     bool logarithmicHistograms;
     // EstimateQuality
     double noiseSigma, signalSigma;
-    // Other
+    // Save
     bool saveImages;
     QString saveImagesDirectory;
+    // Filter
+    QualityFilterType filterType;
+    double minimumQuality;
+    int acceptancePercent;
+    int filterQueueLength;
 };
 
 struct Histograms {

@@ -43,6 +43,10 @@ void ArifMainWindow::initialize()
     connect(signalSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(cropWidthBox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(saveImagesCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(filterAcceptanceRate, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(minimumQualitySpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
+    connect(acceptanceSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
+    connect(filterQueueSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -149,6 +153,22 @@ void ArifMainWindow::updateSettings()
     settings.saveImages = saveImagesCheck->isChecked();
     imageDestinationBox->setEnabled(!settings.saveImages);
     settings.saveImagesDirectory = imageDestinationDirectory->text();
+    if (filterCheck->isChecked()) {
+        settings.filterType = filterMinimumQuality->isChecked() ?
+                              QualityFilterType::MinimumQuality :
+                              QualityFilterType::AcceptanceRate;
+    } else {
+        settings.filterType = QualityFilterType::None;
+    }
+    settings.minimumQuality = minimumQualitySpinbox->value();
+    settings.acceptancePercent = acceptanceSpinbox->value();
+    settings.filterQueueLength = filterQueueSpinbox->value();
+    QSize fsize = settings.plugin->frameSize();
+    // Pick the worst-case: 16-bit color image.
+    int mem = fsize.height() * fsize.width() * 2 * 3;
+    mem *= settings.filterQueueLength;
+    mem /= 1024*1024;
+    memoryLabel->setText(QString("%1 Mb").arg(mem));
     foreman->updateSettings(settings);
 }
 
@@ -184,6 +204,10 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/saveimages", imageDestinationDirectory->text());
     config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
     config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
+    config.setValue("filtering/choice", filterMinimumQuality->isChecked());
+    config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
+    config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
+    config.setValue("filtering/filterqueue", filterQueueSpinbox->value());
 }
 
 void ArifMainWindow::restoreProgramSettings()
@@ -196,4 +220,9 @@ void ArifMainWindow::restoreProgramSettings()
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
     noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
     signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
+    bool choice = config.value("filtering/choice", false).toBool();
+    filterMinimumQuality->setChecked(choice);
+    minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());
+    acceptanceSpinbox->setValue(config.value("filtering/acceptancerate", 100).toInt());
+    filterQueueSpinbox->setValue(config.value("filtering/filterqueue", 10).toInt());
 }
