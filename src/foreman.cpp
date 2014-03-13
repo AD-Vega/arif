@@ -81,6 +81,10 @@ void Foreman::takeFrame(SharedRawFrame frame)
         }
         data->rawFrame = frame;
         futures << FutureData(this, QtConcurrent::run(DecodeStage, data));
+
+        // Request another if there are free resources.
+        if (haveIdleThreads())
+            emit ready();
     }
 }
 
@@ -131,8 +135,8 @@ void Foreman::stageComplete()
                         settings = QSharedPointer<ProcessingSettings>(s);
                     }
                 }
-                // Last stage, request next frame
-                if (started)
+                // Last stage, request another frame if there are free resources.
+                if (started && haveIdleThreads())
                     emit ready();
                 if (render) {
                     render = false;
