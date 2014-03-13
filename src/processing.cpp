@@ -157,7 +157,7 @@ SharedData RenderStage(SharedData d)
     d->completedStages << ProcessingStage::RenderFrame;
     void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
     cv::Mat* M = &d->decoded;
-    switch (d->decoded.type()) {
+    switch (M->type()) {
     case CV_16UC1:
         theFunc = renderFrame<true, false>;
         break;
@@ -171,9 +171,9 @@ SharedData RenderStage(SharedData d)
         theFunc = renderFrame<false, true>;
         break;
     default:
-        d->decoded.convertTo(d->temporary, CV_8U);
-        M = &d->temporary;
-        theFunc = d->decoded.channels() > 1 ?
+        M->convertTo(d->renderTemporary, CV_8U);
+        M = &d->renderTemporary;
+        theFunc = M->channels() > 1 ?
                   renderFrame<false, true> :
                   renderFrame<true, true>;
     }
@@ -188,7 +188,15 @@ SharedData RenderStage(SharedData d)
 SharedData EstimateQualityStage(SharedData d)
 {
     d->completedStages << ProcessingStage::EstimateQuality;
-    d->quality = 0;
+    cv::GaussianBlur(d->decodedFloat, d->blurNoise,
+                     cv::Size(0, 0), d->settings->noiseSigma);
+    cv::GaussianBlur(d->blurNoise, d->blurSignal,
+                     cv::Size(0, 0), d->settings->signalSigma);
+    double noise = cv::norm(d->decodedFloat, d->blurNoise);
+    double signal = cv::norm(d->blurNoise, d->blurSignal);
+    d->quality = noise > 0 ? signal/noise : 0;
+    // Use square for backwards compatibility.
+    d->quality = d->quality * d->quality;
     d->stageSuccessful = true;
     d->errorMessage.clear();
     return d;

@@ -57,6 +57,8 @@ struct ProcessingSettings {
     bool markClipped;
     bool computeHistograms;
     bool logarithmicHistograms;
+    // EstimateQuality
+    double noiseSigma, signalSigma;
 };
 
 struct Histograms {
@@ -94,10 +96,11 @@ struct ProcessingData {
     cv::Rect cvCropArea;
 
     // EstimateQuality
+    cv::Mat blurNoise, blurSignal;
     float quality;
 
     // RenderFrame
-    cv::Mat temporary;
+    cv::Mat renderTemporary;
     QImage renderedFrame;
     QSharedPointer<Histograms> histograms;
 

@@ -90,22 +90,16 @@ void Foreman::stageComplete()
                     emit ready();
             }
             auto previousStage = d->completedStages.last();
-            // Always run, even if there are no free threads now,
+            // Always run; even if there are no free threads now,
             // they will appear sooner or later.
             switch (previousStage) {
             case ProcessingStage::Decode:
-                if (render) {
-                    render = false;
-                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
-                } else if (started) { // Decoding might have been started for rendering only
-                    futures << FutureData(this, QtConcurrent::run(CropStage, d));
-                }
-                break;
-            case ProcessingStage::RenderFrame:
                 if (started) {
                     futures << FutureData(this, QtConcurrent::run(CropStage, d));
+                } else if (render) {
+                    render = false;
+                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
                 }
-                emit frameRendered(d->renderedFrame, d->histograms);
                 break;
             case ProcessingStage::Crop:
                 futures << FutureData(this, QtConcurrent::run(EstimateQualityStage, d));
@@ -114,6 +108,13 @@ void Foreman::stageComplete()
                 // Last stage, request next frame
                 if (started)
                     emit ready();
+                if (render) {
+                    render = false;
+                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
+                }
+                break;
+            case ProcessingStage::RenderFrame:
+                emit frameRendered(d->renderedFrame, d->histograms);
                 break;
             }
         }
