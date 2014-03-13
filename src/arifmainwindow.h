@@ -35,7 +35,7 @@ public:
 private slots:
     void initialize();
     void requestRendering();
-    void displayRenderedFrame(QImage image,QSharedPointer<Histograms> histograms);
+    void displayRenderedFrame(QImage* image, QSharedPointer< Histograms > histograms);
     void foremanStopped();
     void readerError(QString error);
     void readerFinished();

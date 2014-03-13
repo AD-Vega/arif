@@ -62,8 +62,8 @@ void ArifMainWindow::initialize()
     connect(foreman.data(), SIGNAL(ready()),
             reader, SLOT(readFrame()));
     connect(foreman.data(),
-            SIGNAL(frameRendered(QImage, QSharedPointer<Histograms>)),
-            SLOT(displayRenderedFrame(QImage, QSharedPointer<Histograms>)));
+            SIGNAL(frameRendered(QImage*, QSharedPointer<Histograms>)),
+            SLOT(displayRenderedFrame(QImage*, QSharedPointer<Histograms>)));
     connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
@@ -87,12 +87,12 @@ void ArifMainWindow::requestRendering()
     }
 }
 
-void ArifMainWindow::displayRenderedFrame(QImage image,
+void ArifMainWindow::displayRenderedFrame(QImage* image,
                                           QSharedPointer<Histograms>  histograms)
 {
     // The provided image is actually in the foreman's ProcessingData.
     // Just swap it with the one currently rendered.
-    videoWidget->unusedFrame()->swap(image);
+    videoWidget->unusedFrame()->swap(*image);
     videoWidget->swapFrames();
 }
 

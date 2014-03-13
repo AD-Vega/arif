@@ -90,7 +90,7 @@ private slots:
 
 signals:
     // Emitted when a renderNextFrame() request completes.
-    void frameRendered(QImage, QSharedPointer<Histograms> histograms);
+    void frameRendered(QImage* image, QSharedPointer<Histograms> histograms);
 
     // Emitted when a frame can be taken. Used by non-live sources
     // to throttle data input and avoid framedrop.
