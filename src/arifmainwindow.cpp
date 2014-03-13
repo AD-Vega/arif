@@ -70,6 +70,8 @@ void ArifMainWindow::initialize()
         seekSlider->setMaximum(reader->numberOfFrames());
         connect(reader, SIGNAL(frameReady(SharedRawFrame)), SLOT(incrementSlider()));
     }
+
+    printActiveThreads();
 }
 
 void ArifMainWindow::requestRendering()
@@ -155,6 +157,12 @@ void ArifMainWindow::incrementSlider()
     seekSlider->blockSignals(true);
     seekSlider->setValue(seekSlider->value() + 1);
     seekSlider->blockSignals(false);
+}
+
+void ArifMainWindow::printActiveThreads()
+{
+    qDebug() << "Active threads:" << QThreadPool::globalInstance()->activeThreadCount();
+    QTimer::singleShot(3000, this, SLOT(printActiveThreads()));
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)

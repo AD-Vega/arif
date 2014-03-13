@@ -41,6 +41,7 @@ private slots:
     void readerFinished();
     void updateSettings();
     void incrementSlider();
+    void printActiveThreads();
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);
