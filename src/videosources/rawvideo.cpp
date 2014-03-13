@@ -225,7 +225,9 @@ void RawSourceConfigWidget::checkConfig()
 
 void RawSourceConfigWidget::getFile()
 {
-    auto tmp = QFileDialog::getOpenFileName();
+    auto tmp = QFileDialog::getOpenFileName(this,
+                                            "Open raw video file",
+                                            fileName->text());
     if (!tmp.isNull())
         fileName->setText(tmp);
 }
