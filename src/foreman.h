@@ -34,6 +34,7 @@ class Foreman: public QObject
         FutureData(Foreman* parent, QFuture<SharedData> future);
         QFuture<SharedData> future;
         QSharedPointer<QFutureWatcher<SharedData>> watcher;
+        bool operator==(const FutureData& other) const;
     };
 
 public:

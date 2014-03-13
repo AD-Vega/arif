@@ -26,6 +26,11 @@ Foreman::FutureData::FutureData(Foreman* parent, QFuture<SharedData> future_):
     watcher->setFuture(future);
 }
 
+bool Foreman::FutureData::operator==(const Foreman::FutureData& other) const
+{
+    return future == other.future && watcher == other.watcher;
+}
+
 Foreman::Foreman(const ProcessingSettings& settings_, QObject* parent):
     QObject(parent), settings(new ProcessingSettings)
 {
@@ -34,12 +39,15 @@ Foreman::Foreman(const ProcessingSettings& settings_, QObject* parent):
 
 void Foreman::start()
 {
-
+    started = true;
+    emit ready();
 }
 
 void Foreman::stop()
 {
-
+    started = false;
+    if (futures.empty())
+        emit stopped();
 }
 
 void Foreman::updateSettings(const ProcessingSettings& settings)
@@ -72,28 +80,46 @@ void Foreman::takeFrame(SharedRawFrame frame)
 
 void Foreman::stageComplete()
 {
-    QList<int> finished;
-    for (int i = 0; i < futures.count(); i++) {
-        if (futures.at(i).future.isFinished())
-            finished << i;
-    }
-    for (int i: finished) {
-        SharedData d = futures.at(i).watcher->result();
-        auto previousStage = d->completedStages.last();
-        // TODO do more than render
-        // Always run, even if there are no free threads now,
-        // they will appear sooner or later.
-        switch (previousStage) {
-        case ProcessingStage::Decode:
-            if (render) {
-                render = false;
-                futures << FutureData(this, QtConcurrent::run(RenderStage, d));
+    foreach (const FutureData& f, futures) {
+        if (f.watcher->isFinished()) {
+            SharedData d = f.watcher->result();
+            futures.removeOne(f);
+            if (!d->stageSuccessful) {
+                qDebug() << "Processing stage failed:" << d->errorMessage;
+                if (started)
+                    emit ready();
             }
-            break;
-        case ProcessingStage::RenderFrame:
-            emit frameRendered(d->renderedFrame, d->histograms);
+            auto previousStage = d->completedStages.last();
+            // Always run, even if there are no free threads now,
+            // they will appear sooner or later.
+            switch (previousStage) {
+            case ProcessingStage::Decode:
+                if (render) {
+                    render = false;
+                    futures << FutureData(this, QtConcurrent::run(RenderStage, d));
+                } else if (started) { // Decoding might have been started for rendering only
+                    futures << FutureData(this, QtConcurrent::run(CropStage, d));
+                }
+                break;
+            case ProcessingStage::RenderFrame:
+                if (started) {
+                    futures << FutureData(this, QtConcurrent::run(CropStage, d));
+                }
+                emit frameRendered(d->renderedFrame, d->histograms);
+                break;
+            case ProcessingStage::Crop:
+                futures << FutureData(this, QtConcurrent::run(EstimateQualityStage, d));
+                break;
+            case ProcessingStage::EstimateQuality:
+                // Last stage, request next frame
+                if (started)
+                    emit ready();
+                break;
+            }
         }
     }
+    if (!started && futures.empty())
+        emit stopped();
 }
 
 bool Foreman::haveIdleThreads()

@@ -34,7 +34,15 @@ public:
 
 private slots:
     void initialize();
+    void requestRendering();
     void displayRenderedFrame(QImage image,QSharedPointer<Histograms> histograms);
+    void foremanStopped();
+    void readerError(QString error);
+    void readerFinished();
+
+private slots: // UI widget events
+    void on_processButton_toggled(bool checked);
+
 
 private:
     void closeEvent(QCloseEvent* event);
@@ -44,6 +52,7 @@ private:
 private:
     ProcessingSettings settings;
     QScopedPointer<Foreman> foreman;
+    int finishedFrameCounter = 0;
 };
 
 #endif

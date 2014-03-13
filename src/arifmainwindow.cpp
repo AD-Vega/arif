@@ -19,6 +19,7 @@
 #include "arifmainwindow.h"
 #include <QTimer>
 #include <QSettings>
+#include <QMessageBox>
 
 #include <QDebug>
 
@@ -44,16 +45,28 @@ void ArifMainWindow::initialize()
     settings.plugin->reader();
     connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
             foreman.data(), SLOT(takeFrame(SharedRawFrame)));
+    connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
+            SLOT(requestRendering()));
+    connect(settings.plugin->reader(), SIGNAL(error(QString)), SLOT(readerError(QString)));
+    connect(settings.plugin->reader(), SIGNAL(atEnd()), SLOT(readerFinished()));
     connect(foreman.data(), SIGNAL(ready()),
             settings.plugin->reader(), SLOT(readFrame()));
-    // TODO connect error signal
     connect(foreman.data(),
             SIGNAL(frameRendered(QImage, QSharedPointer<Histograms>)),
             SLOT(displayRenderedFrame(QImage, QSharedPointer<Histograms>)));
+    connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
     settings.plugin->reader()->readFrame();
     settings.plugin->reader()->seek(0);
+}
+
+void ArifMainWindow::requestRendering()
+{
+    if (++finishedFrameCounter > displayInterval->value()) {
+        foreman->renderNextFrame();
+        finishedFrameCounter = 0;
+    }
 }
 
 void ArifMainWindow::displayRenderedFrame(QImage image,
@@ -63,6 +76,37 @@ void ArifMainWindow::displayRenderedFrame(QImage image,
     // Just swap it with the one currently rendered.
     videoWidget->unusedFrame()->swap(image);
     videoWidget->swapFrames();
+}
+
+void ArifMainWindow::on_processButton_toggled(bool checked)
+{
+    if (checked) {
+        foreman->start();
+    } else {
+        foreman->stop();
+        processButton->setEnabled(false);
+        // Reenable once foreman actually finishes.
+    }
+}
+
+void ArifMainWindow::foremanStopped()
+{
+    processButton->setEnabled(true);
+}
+
+void ArifMainWindow::readerError(QString error)
+{
+    processButton->setChecked(false);
+    if (error.isNull())
+        error = tr("No error message given, video source needs fixing.");
+    QMessageBox::critical(this,
+                          tr("Video source error"),
+                          error);
+}
+
+void ArifMainWindow::readerFinished()
+{
+    processButton->setChecked(false);
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)
@@ -76,6 +120,7 @@ void ArifMainWindow::saveProgramSettings()
     QSettings config;
     config.setValue("mainwindow/geometry", saveGeometry());
     config.setValue("mainwindow/state", saveState());
+    config.setValue("mainwindow/displayinterval", displayInterval->value());
     config.setValue("processing/cropwidth", cropWidthBox->value());
     config.setValue("processing/saveimages", imageDestinationDirectory->text());
 }
@@ -85,6 +130,7 @@ void ArifMainWindow::restoreProgramSettings()
     QSettings config;
     restoreGeometry(config.value("mainwindow/geometry").toByteArray());
     restoreState(config.value("mainwindow/state").toByteArray());
+    displayInterval->setValue(config.value("mainwindow/displayinterval").toInt());
     cropWidthBox->setValue(config.value("processing/cropwidth").toInt());
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
 }

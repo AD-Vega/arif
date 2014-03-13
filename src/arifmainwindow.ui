@@ -55,30 +55,20 @@
             </widget>
            </item>
            <item row="3" column="0">
-            <widget class="QLabel" name="label_19">
-             <property name="text">
-              <string>Display every frame</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QCheckBox" name="showEveryFrameCheck"/>
-           </item>
-           <item row="4" column="0">
             <widget class="QLabel" name="label_18">
              <property name="text">
               <string>Save images</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1">
+           <item row="3" column="1">
             <widget class="QCheckBox" name="writeImagesCheck">
              <property name="text">
               <string/>
              </property>
             </widget>
            </item>
-           <item row="6" column="0" colspan="2">
+           <item row="5" column="0" colspan="2">
             <widget class="QFrame" name="imageDestinationBox">
              <property name="enabled">
               <bool>true</bool>
@@ -113,6 +103,34 @@
               </item>
              </layout>
             </widget>
+           </item>
+           <item row="1" column="1">
+            <layout class="QHBoxLayout" name="horizontalLayout_3">
+             <item>
+              <widget class="QLabel" name="label">
+               <property name="text">
+                <string>Display every </string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="displayInterval">
+               <property name="suffix">
+                <string> th</string>
+               </property>
+               <property name="minimum">
+                <number>1</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_2">
+               <property name="text">
+                <string>frame</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -174,7 +192,6 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>cropWidthBox</tabstop>
-  <tabstop>showEveryFrameCheck</tabstop>
   <tabstop>writeImagesCheck</tabstop>
   <tabstop>imageDestinationDirectory</tabstop>
   <tabstop>imageDestinationButton</tabstop>

@@ -184,3 +184,12 @@ SharedData RenderStage(SharedData d)
     d->errorMessage.clear();
     return d;
 }
+
+SharedData EstimateQualityStage(SharedData d)
+{
+    d->completedStages << ProcessingStage::EstimateQuality;
+    d->quality = 0;
+    d->stageSuccessful = true;
+    d->errorMessage.clear();
+    return d;
+}
