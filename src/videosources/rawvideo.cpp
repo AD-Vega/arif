@@ -92,6 +92,7 @@ RawVideoReader::RawVideoReader():
     file(RawVideoSource::instance->file)
 {
     file.open(QIODevice::ReadOnly);
+    live = sequential = false; // TODO
 }
 
 VideoSourcePlugin* RawVideoReader::format()

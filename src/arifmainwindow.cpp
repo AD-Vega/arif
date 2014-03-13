@@ -47,23 +47,29 @@ void ArifMainWindow::initialize()
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
     updateSettings();
-    settings.plugin->reader();
-    connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
+    auto reader = settings.plugin->reader();
+    connect(reader, SIGNAL(frameReady(SharedRawFrame)),
             foreman.data(), SLOT(takeFrame(SharedRawFrame)));
-    connect(settings.plugin->reader(), SIGNAL(frameReady(SharedRawFrame)),
+    connect(reader, SIGNAL(frameReady(SharedRawFrame)),
             SLOT(requestRendering()));
-    connect(settings.plugin->reader(), SIGNAL(error(QString)), SLOT(readerError(QString)));
-    connect(settings.plugin->reader(), SIGNAL(atEnd()), SLOT(readerFinished()));
+    connect(reader, SIGNAL(error(QString)), SLOT(readerError(QString)));
+    connect(reader, SIGNAL(atEnd()), SLOT(readerFinished()));
     connect(foreman.data(), SIGNAL(ready()),
-            settings.plugin->reader(), SLOT(readFrame()));
+            reader, SLOT(readFrame()));
     connect(foreman.data(),
             SIGNAL(frameRendered(QImage, QSharedPointer<Histograms>)),
             SLOT(displayRenderedFrame(QImage, QSharedPointer<Histograms>)));
     connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
-    settings.plugin->reader()->readFrame();
-    settings.plugin->reader()->seek(0);
+    reader->readFrame();
+    if (!reader->isSequential()) {
+        reader->seek(0);
+        seekSlider->setEnabled(true);
+        seekSlider->setMinimum(0);
+        seekSlider->setMaximum(reader->numberOfFrames());
+        connect(reader, SIGNAL(frameReady(SharedRawFrame)), SLOT(incrementSlider()));
+    }
 }
 
 void ArifMainWindow::requestRendering()
@@ -102,6 +108,14 @@ void ArifMainWindow::on_imageDestinationButton_clicked(bool checked)
   }
 }
 
+void ArifMainWindow::on_seekSlider_valueChanged(int val)
+{
+    foreman->renderNextFrame();
+    settings.plugin->reader()->seek(val);
+    if (!foreman->isStarted())
+        settings.plugin->reader()->readFrame();
+}
+
 void ArifMainWindow::foremanStopped()
 {
     processButton->setEnabled(true);
@@ -134,6 +148,13 @@ void ArifMainWindow::updateSettings()
     imageDestinationBox->setEnabled(!settings.saveImages);
     settings.saveImagesDirectory = imageDestinationDirectory->text();
     foreman->updateSettings(settings);
+}
+
+void ArifMainWindow::incrementSlider()
+{
+    seekSlider->blockSignals(true);
+    seekSlider->setValue(seekSlider->value() + 1);
+    seekSlider->blockSignals(false);
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)

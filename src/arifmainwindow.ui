@@ -230,6 +230,9 @@
      </item>
      <item>
       <widget class="QSlider" name="seekSlider">
+       <property name="enabled">
+        <bool>false</bool>
+       </property>
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
        </property>

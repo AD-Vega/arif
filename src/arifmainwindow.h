@@ -40,10 +40,12 @@ private slots:
     void readerError(QString error);
     void readerFinished();
     void updateSettings();
+    void incrementSlider();
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);
     void on_imageDestinationButton_clicked(bool checked);
+    void on_seekSlider_valueChanged(int val);
 
 private:
     void closeEvent(QCloseEvent* event);

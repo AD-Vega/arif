@@ -37,6 +37,11 @@ Foreman::Foreman(QObject* parent):
 {
 }
 
+bool Foreman::isStarted()
+{
+    return started;
+}
+
 void Foreman::start()
 {
     started = true;

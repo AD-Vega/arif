@@ -40,6 +40,7 @@ class Foreman: public QObject
 public:
     // Call updateSettings before use!
     explicit Foreman(QObject* parent = 0);
+    bool isStarted();
 
 public slots:
     // Foreman always accepts frames so it can render them,
