@@ -37,6 +37,23 @@ class Foreman: public QObject
         bool operator==(const FutureData& other) const;
     };
 
+    // Used for acceptance rate quality filtering.
+    struct QueuedImage {
+        QSharedPointer<cv::Mat> image;
+        QString filename;
+        float quality;
+        bool operator<(const QueuedImage& other) const {
+            return quality < other.quality;
+        }
+    };
+
+    // Nested types to track imagePool and filterQueue.
+    typedef QSharedPointer<cv::Mat> SharedCvMat;
+    // Return value for the flushing thread.
+    typedef QPair<bool, QList<SharedCvMat>> FlushReturn;
+    // Watcher type for queueFlushFuture.
+    typedef QFutureWatcher<FlushReturn> FlushWatcher;
+
 public:
     // Call updateSettings before use!
     explicit Foreman(QObject* parent = 0);
@@ -64,6 +81,13 @@ private slots:
     // Invoked when a processing stage has completed.
     void processingComplete();
 
+    // Save images in the filtering queue.
+    void flushFilteringQueue();
+
+    // Invoked when the images in the filtering queue have been saved.
+    // Returns the images to the imagePool.
+    void flushComplete();
+
 signals:
     // Emitted when a renderNextFrame() request completes.
     void frameRendered(QImage, QSharedPointer<Histograms> histograms);
@@ -78,6 +102,7 @@ signals:
 private:
     bool haveIdleThreads();
     bool requestAnotherFrame();
+    static FlushReturn flush(QList<QueuedImage> queue, int acceptance);
 
 private:
     bool started = false;
@@ -85,6 +110,10 @@ private:
     QSharedPointer<ProcessingSettings> settings;
     QList<SharedData> dataPool;
     QList<FutureData> futures;
+    QList<QueuedImage> filterQueue;
+    QList<SharedCvMat> imagePool; // For filterQueue.
+    QFuture<FlushReturn> queueFlushFuture; // Flushing the queue is done in a thread.
+    FlushWatcher* flushWatcher;
 };
 
 #endif

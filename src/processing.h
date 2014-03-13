@@ -110,6 +110,11 @@ struct ProcessingData {
     // set this, regardless of whether the image was actually saved.
     // The latter is dependent on whether saving is enabled.
     bool accepted;
+    // When using AcceptanceRate filtering, the save routine will
+    // make a deep copy of the decoded image for the Foreman, who
+    // will swap an unused image with this one.
+    QSharedPointer<cv::Mat> cloned;
+    QString filename;
 
     void reset(QSharedPointer<ProcessingSettings> s) {
         completedStages.clear();

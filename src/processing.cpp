@@ -244,18 +244,27 @@ void SaveStage(SharedData d)
     d->stageSuccessful = true;
     d->errorMessage.clear();
 
+    auto& meta = d->rawFrame->metaData;
+    QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
+    QString filename = fnTemplate
+                       .arg(d->settings->saveImagesDirectory)
+                       .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
+                       .arg(meta.frameOfSecond, 3, 10, QChar('0'))
+                       .arg(d->quality, 0, 'g', 4);
+    d->filename = filename;
+
+    if (d->settings->saveImages &&
+        d->settings->filterType == QualityFilterType::AcceptanceRate) {
+        if (!d->cloned)
+            d->cloned = QSharedPointer<cv::Mat>(new cv::Mat);
+        d->decoded(d->cvCropArea).copyTo(*(d->cloned));
+    }
+
     d->accepted = d->quality >= d->settings->minimumQuality;
     bool doSave = d->settings->filterType == QualityFilterType::None ||
                   (d->settings->filterType == QualityFilterType::MinimumQuality && d->accepted);
     doSave = doSave && d->settings->saveImages;
     if (doSave) {
-        auto& meta = d->rawFrame->metaData;
-        QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
-        QString filename = fnTemplate
-                           .arg(d->settings->saveImagesDirectory)
-                           .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
-                           .arg(meta.frameOfSecond, 3, 10, QChar('0'))
-                           .arg(d->quality, 0, 'g', 4);
         std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
         d->stageSuccessful = cv::imwrite(filename.toStdString(),
                                          d->decoded(d->cvCropArea),

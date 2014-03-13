@@ -47,6 +47,7 @@ void ArifMainWindow::initialize()
     connect(minimumQualitySpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(acceptanceSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(filterQueueSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
+    connect(filterCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
