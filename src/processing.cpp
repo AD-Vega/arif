@@ -36,10 +36,16 @@ static void (*stages[])(SharedData) = {
 
 SharedData processData(SharedData data)
 {
-    for (int i = 0; i < sizeof(stages)/sizeof(void*); i++) {
-        stages[i](data);
-        if (!data->stageSuccessful)
-            return data;
+    if (data->onlyRender) {
+        DecodeStage(data);
+        if (data->stageSuccessful)
+            RenderStage(data);
+    } else {
+        for (int i = 0; i < sizeof(stages) / sizeof(void*); i++) {
+            stages[i](data);
+            if (!data->stageSuccessful)
+                return data;
+        }
     }
     return data;
 }
@@ -234,13 +240,15 @@ void EstimateQualityStage(SharedData d)
 
 void SaveStage(SharedData d)
 {
-    if (!d->settings->saveImages) {
-        d->stageSuccessful = true;
-        d->errorMessage.clear();
-        return;
-    }
     d->completedStages << "Save";
-    if (d->settings->saveImages) {
+    d->stageSuccessful = true;
+    d->errorMessage.clear();
+
+    d->accepted = d->quality >= d->settings->minimumQuality;
+    bool doSave = d->settings->filterType == QualityFilterType::None ||
+                  (d->settings->filterType == QualityFilterType::MinimumQuality && d->accepted);
+    doSave = doSave && d->settings->saveImages;
+    if (doSave) {
         auto& meta = d->rawFrame->metaData;
         QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
         QString filename = fnTemplate
@@ -254,7 +262,5 @@ void SaveStage(SharedData d)
                                          option);
         if (!d->stageSuccessful)
             d->errorMessage = "filename " + filename;
-        else
-            d->errorMessage.clear();
     }
 }

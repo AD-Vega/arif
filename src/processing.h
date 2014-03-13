@@ -37,8 +37,8 @@ SharedData processData(SharedData data);
 enum class QualityFilterType
 {
     None,
-    MinimumQuality,
-    AcceptanceRate
+    MinimumQuality, // Handled by the saving stage of processing
+    AcceptanceRate  // Handled by the foreman
 };
 
 struct ProcessingSettings {
@@ -101,10 +101,15 @@ struct ProcessingData {
     float quality;
 
     // RenderFrame
-    bool doRender;
+    bool doRender, onlyRender;
     cv::Mat renderTemporary;
     QImage renderedFrame;
     QSharedPointer<Histograms> histograms;
+
+    // When using MinimumQuality filtering, the save routine will
+    // set this, regardless of whether the image was actually saved.
+    // The latter is dependent on whether saving is enabled.
+    bool accepted;
 
     void reset(QSharedPointer<ProcessingSettings> s) {
         completedStages.clear();

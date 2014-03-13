@@ -80,6 +80,7 @@ void Foreman::takeFrame(SharedRawFrame frame)
         }
         data->rawFrame = frame;
         data->doRender = render;
+        data->onlyRender = render && !started;
         render = false;
         futures << FutureData(this, QtConcurrent::run(processData, data));
         requestAnotherFrame();
