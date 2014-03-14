@@ -49,6 +49,7 @@ void ArifMainWindow::initialize()
     connect(acceptanceSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(filterQueueSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(filterCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(videoWidget, SIGNAL(selectionComplete(QRect)), SLOT(cropWidthSelected(QRect)));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -154,6 +155,11 @@ void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
     }
 }
 
+void ArifMainWindow::on_cropWidthButton_toggled(bool checked)
+{
+    videoWidget->enableSelection(checked);
+}
+
 void ArifMainWindow::foremanStopped()
 {
     processButton->setEnabled(true);
@@ -240,6 +246,12 @@ void ArifMainWindow::printActiveThreads()
 {
     qDebug() << "Active threads:" << QThreadPool::globalInstance()->activeThreadCount();
     QTimer::singleShot(3000, this, SLOT(printActiveThreads()));
+}
+
+void ArifMainWindow::cropWidthSelected(QRect region)
+{
+    cropWidthBox->setValue(qMax(region.width(), region.height()));
+    cropWidthButton->setChecked(false);
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)

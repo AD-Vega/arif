@@ -19,6 +19,7 @@
 
 
 #include "glvideowidget.h"
+#include <QStyleOption>
 
 GLVideoWidget::GLVideoWidget(QWidget* parent) :
     QGLWidget(QGLFormat(QGL::NoDepthBuffer | QGL::NoSampleBuffers), parent),
@@ -30,6 +31,8 @@ GLVideoWidget::GLVideoWidget(QWidget* parent) :
     whitepen.setWidth(0);
     whitepen.setStyle(Qt::DotLine);
     blackpen.setWidth(0);
+    setAttribute(Qt::WA_NoSystemBackground);
+    setAttribute(Qt::WA_OpaquePaintEvent);
 }
 
 GLVideoWidget::~GLVideoWidget() {}
@@ -140,6 +143,9 @@ void GLVideoWidget::paintGL()
             painter.drawPath(drawnPath);
         }
     } else {
+        QStyleOption opt;
+        opt.initFrom(this);
+        painter.fillRect(out, opt.palette.color(QPalette::Background));
         idleImageRenderer.render(&painter, out);
     }
 }
@@ -226,6 +232,8 @@ void GLVideoWidget::mouseMoveEvent(QMouseEvent* event)
         rectangle.setRect(corner.x(), corner.y(), width, height);
         drawnRectangle = rec;
     }
+
+    update();
 }
 
 void GLVideoWidget::mouseReleaseEvent(QMouseEvent* event)
@@ -235,6 +243,7 @@ void GLVideoWidget::mouseReleaseEvent(QMouseEvent* event)
         selecting = false;
         emit selectionComplete(rectangle);
     }
+    update();
 }
 
 QSize GLVideoWidget::getImageSize()

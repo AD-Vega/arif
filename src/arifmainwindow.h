@@ -42,12 +42,14 @@ private slots:
     void updateSettings();
     void incrementSlider();
     void printActiveThreads();
+    void cropWidthSelected(QRect region);
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);
     void on_imageDestinationButton_clicked(bool checked);
     void on_seekSlider_valueChanged(int val);
     void on_acceptanceEntireFileCheck_toggled(bool checked);
+    void on_cropWidthButton_toggled(bool checked);
 
 private:
     void closeEvent(QCloseEvent* event);
