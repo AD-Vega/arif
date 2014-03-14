@@ -62,6 +62,28 @@ void GLVideoWidget::swapFrames()
     update();
 }
 
+void GLVideoWidget::setDrawnPath(const QPainterPath& path)
+{
+    if (path.isEmpty()) {
+        drawnPath = path;
+    } else {
+        QTransform xform;
+        QRectF fin(in);
+        QRectF fout(out);
+        QPolygonF from(fin);
+        QPolygonF to(fout);
+        // QTransform has problems with closed polygons.
+        from.pop_back();
+        to.pop_back();
+        bool isPossible = QTransform::quadToQuad(from, to, xform);
+        if (isPossible) {
+            drawnPath = xform.map(path);
+        } else {
+            drawnPath = QPainterPath();
+        }
+    }
+}
+
 QImage* GLVideoWidget::unusedFrame()
 {
     return &unusedImage;
@@ -109,6 +131,13 @@ void GLVideoWidget::paintGL()
             painter.drawRect(drawnRectangle);
             painter.setPen(whitepen);
             painter.drawRect(drawnRectangle);
+        }
+
+        if (!drawnPath.isEmpty()) {
+            painter.setPen(blackpen);
+            painter.drawPath(drawnPath);
+            painter.setPen(whitepen);
+            painter.drawPath(drawnPath);
         }
     } else {
         idleImageRenderer.render(&painter, out);

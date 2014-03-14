@@ -96,6 +96,8 @@ void CropStage(SharedData d)
         d->stageSuccessful = false;
         d->errorMessage = "Crop rectangle out of image bounds";
     } else {
+        if (d->doRender)
+            d->painterPath.addRect(cropRect);
         d->stageSuccessful = true;
         d->errorMessage.clear();
     }

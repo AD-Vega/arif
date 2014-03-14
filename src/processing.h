@@ -25,7 +25,7 @@
 #include <QList>
 #include <QRect>
 #include <QImage>
-#include <QRunnable>
+#include <QPainterPath>
 #include <opencv2/core/core.hpp>
 
 class ProcessingData;
@@ -108,6 +108,8 @@ struct ProcessingData {
     cv::Mat renderTemporary;
     QImage renderedFrame;
     QSharedPointer<Histograms> histograms;
+    // Any stage can draw into this when doRender == true.
+    QPainterPath painterPath;
 
     // When using MinimumQuality filtering, the save routine will
     // set this, regardless of whether the image was actually saved.
@@ -123,6 +125,7 @@ struct ProcessingData {
         completedStages.clear();
         settings = s;
         doRender = false;
+        painterPath = QPainterPath();
     }
 };
 

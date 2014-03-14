@@ -38,6 +38,7 @@ public:
     QImage* unusedFrame();
     void swapFrames();
     void setImage(const QImage& image_ = QImage());
+    void setDrawnPath(const QPainterPath& path);
     QSize getImageSize();
 
 public slots:
@@ -62,6 +63,7 @@ private:
     QRect rectangle, drawnRectangle;
     QSize fixedSize;
     QPen whitepen, blackpen;
+    QPainterPath drawnPath;
 };
 
 #endif // GLVIDEOWIDGET_H

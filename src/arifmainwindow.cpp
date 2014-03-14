@@ -95,6 +95,7 @@ void ArifMainWindow::frameProcessed(SharedData data)
         // Just swap image data with the one currently rendered.
         videoWidget->unusedFrame()->swap(data->renderedFrame);
         videoWidget->swapFrames();
+        videoWidget->setDrawnPath(data->painterPath);
     }
     if (acceptanceEntireFileCheck->isChecked())
         entireFileQualities << data->quality;
