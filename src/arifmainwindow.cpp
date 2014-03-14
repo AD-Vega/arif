@@ -77,6 +77,10 @@ void ArifMainWindow::initialize()
         seekSlider->setMaximum(reader->numberOfFrames());
         connect(reader, SIGNAL(frameReady(SharedRawFrame)), SLOT(incrementSlider()));
         acceptanceEntireFileCheck->setEnabled(true);
+        QString txt = acceptanceEntireFileCheck->text();
+        txt += " (" + tr("%1 frames") + ")";
+        txt = txt.arg(reader->numberOfFrames());
+        acceptanceEntireFileCheck->setText(txt);
     }
 
     printActiveThreads();
