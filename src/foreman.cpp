@@ -100,8 +100,8 @@ void Foreman::processingComplete()
             futures.removeOne(f);
             if (!d->stageSuccessful) {
                 auto previousStage = d->completedStages.last();
-                QString msg("Processing stage %1 failed:");
-                qDebug() << msg.arg(previousStage) << d->errorMessage;
+                QString msg("Processing stage %1 failed: %2");
+                qDebug() << msg.arg(previousStage, d->errorMessage);
                 if (previousStage == "Save") {
                     qDebug() << "Error writing image, saving disabled.";
                     auto s = new ProcessingSettings;
@@ -110,25 +110,25 @@ void Foreman::processingComplete()
                     settings = QSharedPointer<ProcessingSettings>(s);
                 }
                 requestAnotherFrame();
-            }
-
-            if (d->settings->saveImages &&
-                d->settings->filterType == QualityFilterType::AcceptanceRate) {
-                SharedCvMat tmp;
-                if (!imagePool.empty())
-                    tmp = imagePool.takeLast();
-                else
-                    tmp = QSharedPointer<cv::Mat>(new cv::Mat);
-                tmp.swap(d->cloned);
-                QueuedImage qi;
-                qi.image = tmp;
-                qi.filename = d->filename;
-                qi.quality = d->quality;
-                filterQueue << qi;
+            } else {
+                if (d->settings->saveImages &&
+                        d->settings->filterType == QualityFilterType::AcceptanceRate) {
+                    SharedCvMat tmp;
+                    if (!imagePool.empty())
+                        tmp = imagePool.takeLast();
+                    else
+                        tmp = QSharedPointer<cv::Mat>(new cv::Mat);
+                    tmp.swap(d->cloned);
+                    QueuedImage qi;
+                    qi.image = tmp;
+                    qi.filename = d->filename;
+                    qi.quality = d->quality;
+                    filterQueue << qi;
+                }
             }
             emit frameProcessed(d);
-            requestAnotherFrame();
             dataPool << d;
+            requestAnotherFrame();
         }
     }
     if (filterQueue.count() >= settings->filterQueueLength)

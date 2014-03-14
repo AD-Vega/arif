@@ -28,10 +28,10 @@ void SaveStage(SharedData d);
 
 static void (*stages[])(SharedData) = {
     DecodeStage,
+    RenderStage,
     CropStage,
     EstimateQualityStage,
     SaveStage,
-    RenderStage
 };
 
 SharedData processData(SharedData data)
@@ -224,8 +224,6 @@ void RenderStage(SharedData d)
                   renderFrame<false, true> :
                   renderFrame<true, true>;
     }
-    if (!d->histograms)
-        d->histograms = QSharedPointer<Histograms>(new Histograms);
     theFunc(*M, &d->renderedFrame, d->settings->markClipped,
             d->histograms.data(), d->settings->logarithmicHistograms);
     d->stageSuccessful = true;
@@ -269,8 +267,6 @@ void SaveStage(SharedData d)
 
     if (d->settings->saveImages &&
         d->settings->filterType == QualityFilterType::AcceptanceRate) {
-        if (!d->cloned)
-            d->cloned = QSharedPointer<cv::Mat>(new cv::Mat);
         d->decoded(d->cvCropArea).copyTo(*(d->cloned));
     }
 

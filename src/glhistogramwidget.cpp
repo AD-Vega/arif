@@ -24,6 +24,11 @@ GLHistogramWidget::GLHistogramWidget(QWidget* parent) :
     histograms(new Histograms), unused(new Histograms),
     histRed(histograms->red), histGreen(histograms->green), histBlue(histograms->blue)
 {
+    for (int i = 0; i < 256; i++) {
+        histograms->red[i] = 0;
+        histograms->green[i] = 0;
+        histograms->blue[i] = 0;
+    }
     QFile iconfile("/usr/share/qarv/1/view-object-histogram-linear.svgz");
     if (iconfile.exists())
         idleImageIcon = QIcon(iconfile.fileName());
@@ -48,12 +53,12 @@ void GLHistogramWidget::swapHistograms(bool grayscale)
 {
     idle = false;
     gray = grayscale;
-    histRed = unused->red;
-    histGreen = unused->green;
-    histBlue = unused->blue;
     auto tmp = histograms;
     histograms = unused;
     unused = tmp;
+    histRed = histograms->red;
+    histGreen = histograms->green;
+    histBlue = histograms->blue;
     update();
 }
 

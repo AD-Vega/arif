@@ -67,7 +67,7 @@ struct ProcessingSettings {
 };
 
 struct Histograms {
-  float red[256], green[256], blue[256];
+    float red[256], green[256], blue[256];
 };
 
 /*
@@ -108,7 +108,8 @@ struct ProcessingData {
     bool doRender, onlyRender;
     cv::Mat renderTemporary;
     QImage renderedFrame;
-    QSharedPointer<Histograms> histograms;
+    QSharedPointer<Histograms> histograms =
+        QSharedPointer<Histograms>(new Histograms);
     // Any stage can draw into this when doRender == true.
     QPainterPath painterPath;
 
@@ -119,7 +120,7 @@ struct ProcessingData {
     // When using AcceptanceRate filtering, the save routine will
     // make a deep copy of the decoded image for the Foreman, who
     // will swap an unused image with this one.
-    QSharedPointer<cv::Mat> cloned;
+    QSharedPointer<cv::Mat> cloned = QSharedPointer<cv::Mat>(new cv::Mat);
     QString filename;
 
     void reset(QSharedPointer<ProcessingSettings> s) {
