@@ -69,12 +69,13 @@ void DecodeStage(SharedData d)
 void CropStage(SharedData d)
 {
     d->completedStages << "Crop";
+    float black = d->settings->threshold;
     float sum = 0, x = 0, y = 0;
     const cv::Mat& m = d->grayscale;
     for (int i = 0; i < m.rows; i++) {
         const float* row = m.ptr<float>(i);
         for (int j = 0; j < m.cols; j++) {
-            const float val = row[j];
+            const float val = row[j] > black ? 1.0 : 0.0;
             sum += val;
             x += val * j;
             y += val * i;

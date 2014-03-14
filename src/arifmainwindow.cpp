@@ -49,7 +49,10 @@ void ArifMainWindow::initialize()
     connect(acceptanceSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(filterQueueSpinbox, SIGNAL(valueChanged(int)), SLOT(updateSettings()));
     connect(filterCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
-    connect(videoWidget, SIGNAL(selectionComplete(QRect)), SLOT(cropWidthSelected(QRect)));
+    connect(cropWidthButton, SIGNAL(toggled(bool)), videoWidget, SLOT(enableSelection(bool)));
+    connect(thresholdButton, SIGNAL(toggled(bool)), videoWidget, SLOT(enableSelection(bool)));
+    connect(videoWidget, SIGNAL(selectionComplete(QRect)), SLOT(imageRegionSelected(QRect)));
+    connect(thresholdSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -104,6 +107,16 @@ void ArifMainWindow::frameProcessed(SharedData data)
     }
     if (acceptanceEntireFileCheck->isChecked())
         entireFileQualities << data->quality;
+    if (!thresholdSamplingArea.isEmpty()) {
+        QRect t = thresholdSamplingArea;
+        thresholdSamplingArea = QRect();
+        cv::Rect ct(t.x(), t.y(), t.width(), t.height());
+        cv::Mat_<float> m = data->grayscale(ct);
+        m = m.clone().reshape(1, m.total());
+        qSort(m);
+        // Disregard burnt pixels, so pick the 99% brightest.
+        thresholdSpinbox->setValue(m(.99 * m.total()));
+    }
 }
 
 void ArifMainWindow::on_processButton_toggled(bool checked)
@@ -135,10 +148,15 @@ void ArifMainWindow::on_imageDestinationButton_clicked(bool checked)
 
 void ArifMainWindow::on_seekSlider_valueChanged(int val)
 {
+    auto reader = settings.plugin->reader();
     foreman->renderNextFrame();
-    settings.plugin->reader()->seek(val);
-    if (!foreman->isStarted())
+    reader->seek(val);
+    if (!foreman->isStarted()) {
+        disconnect(reader, SIGNAL(frameReady(SharedRawFrame)), this, SLOT(incrementSlider()));
         settings.plugin->reader()->readFrame();
+        connect(reader, SIGNAL(frameReady(SharedRawFrame)), SLOT(incrementSlider()));
+        settings.plugin->reader()->seek(val);
+    }
 }
 
 void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
@@ -157,11 +175,6 @@ void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
             wgt != acceptanceLbl)
             wgt->setEnabled(!checked);
     }
-}
-
-void ArifMainWindow::on_cropWidthButton_toggled(bool checked)
-{
-    videoWidget->enableSelection(checked);
 }
 
 void ArifMainWindow::foremanStopped()
@@ -209,6 +222,7 @@ void ArifMainWindow::updateSettings()
 {
     settings.computeHistograms = false;
     settings.cropWidth = cropWidthBox->value();
+    settings.threshold = thresholdSpinbox->value();
     settings.logarithmicHistograms = false;
     settings.markClipped = false;
     settings.noiseSigma = noiseSigmaSpinbox->value();
@@ -252,10 +266,25 @@ void ArifMainWindow::printActiveThreads()
     QTimer::singleShot(3000, this, SLOT(printActiveThreads()));
 }
 
-void ArifMainWindow::cropWidthSelected(QRect region)
+void ArifMainWindow::imageRegionSelected(QRect region)
 {
-    cropWidthBox->setValue(qMax(region.width(), region.height()));
-    cropWidthButton->setChecked(false);
+    if (cropWidthButton->isChecked()) {
+        cropWidthBox->setValue(qMax(region.width(), region.height()));
+        cropWidthButton->setChecked(false);
+    }
+    if (thresholdButton->isChecked()) {
+        thresholdButton->setChecked(false);
+        thresholdSamplingArea = region;
+        if (!foreman->isStarted()) {
+            auto reader = settings.plugin->reader();
+            if (reader->isSequential()) {
+                foreman->renderNextFrame();
+                reader->readFrame();
+            } else {
+                on_seekSlider_valueChanged(seekSlider->value());
+            }
+        }
+    }
 }
 
 void ArifMainWindow::closeEvent(QCloseEvent* event)
@@ -277,6 +306,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/saveimages", imageDestinationDirectory->text());
     config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
     config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
+    config.setValue("processing/threshold", thresholdSpinbox->value());
     config.setValue("filtering/choice", filterMinimumQuality->isChecked());
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
@@ -293,6 +323,7 @@ void ArifMainWindow::restoreProgramSettings()
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
     noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
     signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
+    thresholdSpinbox->setValue(config.value("processing/threshold", 0.0).toDouble());
     bool choice = config.value("filtering/choice", false).toBool();
     filterMinimumQuality->setChecked(choice);
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());
