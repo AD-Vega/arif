@@ -224,9 +224,10 @@ void RenderStage(SharedData d)
                   renderFrame<false, true> :
                   renderFrame<true, true>;
     }
+    if (!d->histograms)
+        d->histograms = QSharedPointer<Histograms>(new Histograms);
     theFunc(*M, &d->renderedFrame, d->settings->markClipped,
-            d->settings->computeHistograms ? d->histograms.data() : nullptr,
-            d->settings->logarithmicHistograms);
+            d->histograms.data(), d->settings->logarithmicHistograms);
     d->stageSuccessful = true;
     d->errorMessage.clear();
 }

@@ -53,7 +53,6 @@ struct ProcessingSettings {
     double threshold;
     // RenderFrame
     bool markClipped;
-    bool computeHistograms;
     bool logarithmicHistograms;
     // EstimateQuality
     double noiseSigma, signalSigma;

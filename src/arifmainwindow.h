@@ -43,6 +43,7 @@ private slots:
     void incrementSlider();
     void printActiveThreads();
     void imageRegionSelected(QRect region);
+    void getFrameToRender();
 
 private slots: // UI widget events
     void on_processButton_toggled(bool checked);

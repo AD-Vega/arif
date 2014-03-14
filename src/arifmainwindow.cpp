@@ -54,6 +54,8 @@ void ArifMainWindow::initialize()
     connect(videoWidget, SIGNAL(selectionComplete(QRect)), SLOT(imageRegionSelected(QRect)));
     connect(thresholdSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(cropCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(histogramLogarithmicCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(histogramLogarithmicCheck, SIGNAL(toggled(bool)), SLOT(getFrameToRender()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -105,6 +107,10 @@ void ArifMainWindow::frameProcessed(SharedData data)
         videoWidget->unusedFrame()->swap(data->renderedFrame);
         videoWidget->swapFrames();
         videoWidget->setDrawnPath(data->painterPath);
+        auto tmp = histogramWidget->unusedHistograms();
+        histogramWidget->unusedHistograms() = data->histograms;
+        data->histograms = tmp;
+        histogramWidget->swapHistograms(1 == data->decoded.channels());
     }
     if (acceptanceEntireFileCheck->isChecked())
         entireFileQualities << data->quality;
@@ -225,11 +231,10 @@ void ArifMainWindow::readerFinished()
 
 void ArifMainWindow::updateSettings()
 {
-    settings.computeHistograms = false;
     settings.doCrop = cropCheck->isChecked();
     settings.cropWidth = cropWidthBox->value();
     settings.threshold = thresholdSpinbox->value();
-    settings.logarithmicHistograms = false;
+    settings.logarithmicHistograms = histogramLogarithmicCheck->isChecked();
     settings.markClipped = false;
     settings.noiseSigma = noiseSigmaSpinbox->value();
     settings.signalSigma = signalSigmaSpinbox->value();
@@ -286,14 +291,19 @@ void ArifMainWindow::imageRegionSelected(QRect region)
     if (thresholdButton->isChecked()) {
         thresholdButton->setChecked(false);
         thresholdSamplingArea = region;
-        if (!foreman->isStarted()) {
-            auto reader = settings.plugin->reader();
-            if (reader->isSequential()) {
-                foreman->renderNextFrame();
-                reader->readFrame();
-            } else {
-                on_seekSlider_valueChanged(seekSlider->value());
-            }
+        getFrameToRender();
+    }
+}
+
+void ArifMainWindow::getFrameToRender()
+{
+    if (!foreman->isStarted()) {
+        auto reader = settings.plugin->reader();
+        if (reader->isSequential()) {
+            foreman->renderNextFrame();
+            reader->readFrame();
+        } else {
+            on_seekSlider_valueChanged(seekSlider->value());
         }
     }
 }
@@ -319,6 +329,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
     config.setValue("processing/threshold", thresholdSpinbox->value());
     config.setValue("processing/crop", cropCheck->isChecked());
+    config.setValue("processing/loghistogram", histogramLogarithmicCheck->isChecked());
     config.setValue("filtering/choice", filterMinimumQuality->isChecked());
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
@@ -337,6 +348,7 @@ void ArifMainWindow::restoreProgramSettings()
     signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
     thresholdSpinbox->setValue(config.value("processing/threshold", 0.0).toDouble());
     cropCheck->setChecked(config.value("processing/crop", true).toBool());
+    histogramLogarithmicCheck->setChecked(config.value("processing/loghistogram").toBool());
     bool choice = config.value("filtering/choice", false).toBool();
     filterMinimumQuality->setChecked(choice);
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());
