@@ -53,6 +53,7 @@ void ArifMainWindow::initialize()
     connect(thresholdButton, SIGNAL(toggled(bool)), videoWidget, SLOT(enableSelection(bool)));
     connect(videoWidget, SIGNAL(selectionComplete(QRect)), SLOT(imageRegionSelected(QRect)));
     connect(thresholdSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
+    connect(cropCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -221,6 +222,7 @@ void ArifMainWindow::readerFinished()
 void ArifMainWindow::updateSettings()
 {
     settings.computeHistograms = false;
+    settings.doCrop = cropCheck->isChecked();
     settings.cropWidth = cropWidthBox->value();
     settings.threshold = thresholdSpinbox->value();
     settings.logarithmicHistograms = false;
@@ -307,6 +309,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
     config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
     config.setValue("processing/threshold", thresholdSpinbox->value());
+    config.setValue("processing/crop", cropCheck->isChecked());
     config.setValue("filtering/choice", filterMinimumQuality->isChecked());
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
@@ -324,6 +327,7 @@ void ArifMainWindow::restoreProgramSettings()
     noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
     signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
     thresholdSpinbox->setValue(config.value("processing/threshold", 0.0).toDouble());
+    cropCheck->setChecked(config.value("processing/crop", true).toBool());
     bool choice = config.value("filtering/choice", false).toBool();
     filterMinimumQuality->setChecked(choice);
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());

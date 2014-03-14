@@ -69,9 +69,20 @@ void DecodeStage(SharedData d)
 void CropStage(SharedData d)
 {
     d->completedStages << "Crop";
+
+    const cv::Mat& m = d->grayscale;
+    QRect imageRect(0, 0, m.cols, m.rows);
+    if (!d->settings->doCrop) {
+        d->cropArea = imageRect;
+        d->cvCropArea = cv::Rect(imageRect.x(), imageRect.y(),
+                                 imageRect.width(), imageRect.height());
+        d->stageSuccessful = true;
+        d->errorMessage.clear();
+        return;
+    }
+
     float black = d->settings->threshold;
     float sum = 0, x = 0, y = 0;
-    const cv::Mat& m = d->grayscale;
     for (int i = 0; i < m.rows; i++) {
         const float* row = m.ptr<float>(i);
         for (int j = 0; j < m.cols; j++) {
@@ -88,7 +99,6 @@ void CropStage(SharedData d)
                    d->settings->cropWidth,
                    d->settings->cropWidth);
     cropRect.moveCenter(QPoint(x, y));
-    QRect imageRect(0, 0, m.cols, m.rows);
     d->cropArea = cropRect;
     d->cvCropArea = cv::Rect(cropRect.x(), cropRect.y(),
                              cropRect.width(), cropRect.height());

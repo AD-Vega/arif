@@ -48,6 +48,7 @@ struct ProcessingSettings {
     // This will never be changed once the source is chosen
     VideoSourcePlugin* plugin;
     // Crop
+    bool doCrop;
     uint cropWidth;
     double threshold;
     // RenderFrame
