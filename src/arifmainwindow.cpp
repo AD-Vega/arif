@@ -23,6 +23,7 @@
 #include <QFileDialog>
 
 #include <QDebug>
+#include <cassert>
 
 ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
                                QWidget* parent,
@@ -62,8 +63,8 @@ void ArifMainWindow::initialize()
     connect(foreman.data(), SIGNAL(ready()),
             reader, SLOT(readFrame()));
     connect(foreman.data(),
-            SIGNAL(frameRendered(QImage*, QSharedPointer<Histograms>)),
-            SLOT(displayRenderedFrame(QImage*, QSharedPointer<Histograms>)));
+            SIGNAL(frameProcessed(SharedData)),
+            SLOT(frameProcessed(SharedData)));
     connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
@@ -74,6 +75,7 @@ void ArifMainWindow::initialize()
         seekSlider->setMinimum(0);
         seekSlider->setMaximum(reader->numberOfFrames());
         connect(reader, SIGNAL(frameReady(SharedRawFrame)), SLOT(incrementSlider()));
+        acceptanceEntireFileCheck->setEnabled(true);
     }
 
     printActiveThreads();
@@ -87,24 +89,34 @@ void ArifMainWindow::requestRendering()
     }
 }
 
-void ArifMainWindow::displayRenderedFrame(QImage* image,
-                                          QSharedPointer<Histograms>  histograms)
+void ArifMainWindow::frameProcessed(SharedData data)
 {
-    // The provided image is actually in the foreman's ProcessingData.
-    // Just swap it with the one currently rendered.
-    videoWidget->unusedFrame()->swap(*image);
-    videoWidget->swapFrames();
+    if (data->doRender) {
+        // Just swap image data with the one currently rendered.
+        videoWidget->unusedFrame()->swap(data->renderedFrame);
+        videoWidget->swapFrames();
+    }
+    if (acceptanceEntireFileCheck->isChecked())
+        entireFileQualities << data->quality;
 }
 
 void ArifMainWindow::on_processButton_toggled(bool checked)
 {
+    entireFileQualities.clear();
     if (checked) {
+        if (acceptanceEntireFileCheck->isChecked()) {
+            seekSlider->setValue(0);
+            saveImagesCheck->setChecked(false);
+            filterCheck->setChecked(false);
+        }
         foreman->start();
     } else {
         foreman->stop();
         processButton->setEnabled(false);
         // Reenable once foreman actually finishes.
     }
+    bool haveFile = !checked && !settings.plugin->reader()->isSequential();
+    acceptanceEntireFileCheck->setEnabled(haveFile);
 }
 
 void ArifMainWindow::on_imageDestinationButton_clicked(bool checked)
@@ -121,6 +133,24 @@ void ArifMainWindow::on_seekSlider_valueChanged(int val)
     settings.plugin->reader()->seek(val);
     if (!foreman->isStarted())
         settings.plugin->reader()->readFrame();
+}
+
+void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
+{
+    saveImagesCheck->setEnabled(!checked);
+    filterCheck->setEnabled(!checked);
+    seekSlider->setEnabled(!checked);
+    auto self = qobject_cast<QWidget*>(acceptanceEntireFileCheck);
+    auto acceptance = qobject_cast<QWidget*>(acceptanceSpinbox);
+    auto acceptanceLbl = qobject_cast<QWidget*>(acceptanceSpinboxLabel);
+    foreach (auto wgtObject, filteringBox->children()) {
+        auto wgt = qobject_cast<QWidget*>(wgtObject);
+        if (wgt &&
+            wgt != self &&
+            wgt != acceptance &&
+            wgt != acceptanceLbl)
+            wgt->setEnabled(!checked);
+    }
 }
 
 void ArifMainWindow::foremanStopped()
@@ -140,7 +170,28 @@ void ArifMainWindow::readerError(QString error)
 
 void ArifMainWindow::readerFinished()
 {
-    processButton->setChecked(false);
+    if (acceptanceEntireFileCheck->isChecked()) {
+        if (filterCheck->isChecked()) {
+            // Second pass finished.
+            entireFileQualities.clear();
+            filterCheck->setChecked(false);
+            saveImagesCheck->setChecked(false);
+            processButton->setChecked(false);
+        } else {
+            // Start second pass.
+            qSort(entireFileQualities);
+            int acceptance = acceptanceSpinbox->value();
+            int minIdx = entireFileQualities.count() * (100 - acceptance) / 100;
+            float minQuality = entireFileQualities.at(minIdx);
+            filterMinimumQuality->setChecked(true);
+            minimumQualitySpinbox->setValue(minQuality);
+            filterCheck->setChecked(true);
+            saveImagesCheck->setChecked(true);
+            seekSlider->setValue(0);
+        }
+    } else {
+        processButton->setChecked(false);
+    }
 }
 
 void ArifMainWindow::updateSettings()
@@ -155,9 +206,13 @@ void ArifMainWindow::updateSettings()
     imageDestinationBox->setEnabled(!settings.saveImages);
     settings.saveImagesDirectory = imageDestinationDirectory->text();
     if (filterCheck->isChecked()) {
-        settings.filterType = filterMinimumQuality->isChecked() ?
-                              QualityFilterType::MinimumQuality :
-                              QualityFilterType::AcceptanceRate;
+        if (filterMinimumQuality->isChecked()) {
+            settings.filterType = QualityFilterType::MinimumQuality;
+        } else if (filterAcceptanceRate->isChecked()) {
+            settings.filterType = QualityFilterType::AcceptanceRate;
+        } else {
+            assert(false);
+        }
     } else {
         settings.filterType = QualityFilterType::None;
     }

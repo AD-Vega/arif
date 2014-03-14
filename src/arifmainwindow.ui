@@ -139,7 +139,7 @@
               </widget>
              </item>
              <item row="4" column="0">
-              <widget class="QLabel" name="label_4">
+              <widget class="QLabel" name="acceptanceSpinboxLabel">
                <property name="text">
                 <string>Acceptance:</string>
                </property>
@@ -148,7 +148,7 @@
              <item row="4" column="1">
               <widget class="QSpinBox" name="acceptanceSpinbox">
                <property name="suffix">
-                <string>%</string>
+                <string> %</string>
                </property>
                <property name="maximum">
                 <number>100</number>
@@ -175,17 +175,27 @@
                </property>
               </widget>
              </item>
-             <item row="6" column="0">
+             <item row="7" column="0">
               <widget class="QLabel" name="label_9">
                <property name="text">
                 <string>Memory (over)estimate:</string>
                </property>
               </widget>
              </item>
-             <item row="6" column="1">
+             <item row="7" column="1">
               <widget class="QLabel" name="memoryLabel">
                <property name="text">
                 <string notr="true">mem</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="0">
+              <widget class="QCheckBox" name="acceptanceEntireFileCheck">
+               <property name="enabled">
+                <bool>false</bool>
+               </property>
+               <property name="text">
+                <string>Filter entire file</string>
                </property>
               </widget>
              </item>
@@ -220,20 +230,6 @@
              </property>
              <property name="value">
               <number>100</number>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_18">
-             <property name="text">
-              <string>Save images</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QCheckBox" name="saveImagesCheck">
-             <property name="text">
-              <string/>
              </property>
             </widget>
            </item>
@@ -293,20 +289,24 @@
              </item>
             </layout>
            </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_10">
-             <property name="text">
-              <string>Filter images</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QCheckBox" name="filterCheck"/>
-           </item>
            <item row="1" column="0">
             <widget class="QLabel" name="label">
              <property name="text">
               <string>Display every</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QCheckBox" name="saveImagesCheck">
+             <property name="text">
+              <string>Save images</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="0">
+            <widget class="QCheckBox" name="filterCheck">
+             <property name="text">
+              <string>Filter images</string>
              </property>
             </widget>
            </item>
@@ -373,7 +373,6 @@
  <tabstops>
   <tabstop>tabWidget</tabstop>
   <tabstop>cropWidthBox</tabstop>
-  <tabstop>saveImagesCheck</tabstop>
   <tabstop>imageDestinationDirectory</tabstop>
   <tabstop>imageDestinationButton</tabstop>
   <tabstop>processButton</tabstop>

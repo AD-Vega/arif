@@ -112,8 +112,6 @@ void Foreman::processingComplete()
                 requestAnotherFrame();
             }
 
-            if (d->doRender)
-                emit frameRendered(&d->renderedFrame, d->histograms);
             if (d->settings->saveImages &&
                 d->settings->filterType == QualityFilterType::AcceptanceRate) {
                 SharedCvMat tmp;
@@ -128,6 +126,7 @@ void Foreman::processingComplete()
                 qi.quality = d->quality;
                 filterQueue << qi;
             }
+            emit frameProcessed(d);
             requestAnotherFrame();
             dataPool << d;
         }

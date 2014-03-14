@@ -89,15 +89,18 @@ private slots:
     void flushComplete();
 
 signals:
-    // Emitted when a renderNextFrame() request completes.
-    void frameRendered(QImage* image, QSharedPointer<Histograms> histograms);
-
     // Emitted when a frame can be taken. Used by non-live sources
     // to throttle data input and avoid framedrop.
     void ready();
 
     // Emitted when stopping is complete.
     void stopped();
+
+    // Emmited when processing of a frame has completed. It makes all data
+    // available, but note that it will be reused immediately, so the
+    // receiving slot should either process it in the main thread or
+    // copy whatever it needs.
+    void frameProcessed(SharedData data);
 
 private:
     bool haveIdleThreads();

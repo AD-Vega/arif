@@ -39,6 +39,9 @@ enum class QualityFilterType
     None,
     MinimumQuality, // Handled by the saving stage of processing
     AcceptanceRate  // Handled by the foreman
+    // Filtering a whole file is handled by main window, which will
+    // first use None and track qualities itself, and then do a second
+    // pass using MinimumQuality.
 };
 
 struct ProcessingSettings {
