@@ -61,6 +61,7 @@ private:
     int finishedFrameCounter = 0;
     QList<float> entireFileQualities;
     QRect thresholdSamplingArea;
+    int decodedImagePixelSize = 0;
 };
 
 #endif

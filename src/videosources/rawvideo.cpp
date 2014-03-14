@@ -47,7 +47,7 @@ SharedRawFrame RawVideoFrame::copy()
     return f;
 }
 
-VideoSourcePlugin* RawVideoFrame::format()
+VideoSourcePlugin* RawVideoFrame::plugin()
 {
     return RawVideoSource::instance;
 }
@@ -70,12 +70,12 @@ void RawVideoFrame::load(QDataStream& s)
 RawVideoDecoder::RawVideoDecoder()
 {
     auto s = RawVideoSource::instance;
-    auto d = QArvDecoder::makeSwScaleDecoder(s->pixfmt, s->frameSize(),
+    auto d = QArvDecoder::makeSwScaleDecoder(s->pixfmt, s->size,
              SWS_FAST_BILINEAR | SWS_BITEXACT);
     thedecoder.reset(d);
 }
 
-VideoSourcePlugin* RawVideoDecoder::format()
+VideoSourcePlugin* RawVideoDecoder::plugin()
 {
     return RawVideoSource::instance;
 }
@@ -96,7 +96,7 @@ RawVideoReader::RawVideoReader():
     file.seek(RawVideoSource::instance->headerBytes);
 }
 
-VideoSourcePlugin* RawVideoReader::format()
+VideoSourcePlugin* RawVideoReader::plugin()
 {
     return RawVideoSource::instance;
 }
@@ -278,11 +278,6 @@ SharedDecoder RawVideoSource::createDecoder()
 SharedRawFrame RawVideoSource::createRawFrame()
 {
     return SharedRawFrame(new RawVideoFrame);
-}
-
-QSize RawVideoSource::frameSize()
-{
-    return size;
 }
 
 Reader* RawVideoSource::reader()

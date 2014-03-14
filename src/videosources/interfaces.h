@@ -46,7 +46,7 @@ class RawFrame
 public:
     virtual ~RawFrame() {}
     virtual SharedRawFrame copy() = 0;
-    virtual VideoSourcePlugin* format() = 0;
+    virtual VideoSourcePlugin* plugin() = 0;
 
     // Default serialization takes care of metadata.
     virtual void serialize(QDataStream& s);
@@ -59,7 +59,7 @@ class Decoder
 public:
     virtual ~Decoder() {}
     virtual const cv::Mat decode(RawFrame* in) = 0;
-    virtual VideoSourcePlugin* format() = 0;
+    virtual VideoSourcePlugin* plugin() = 0;
 };
 
 class Reader: public QObject
@@ -71,7 +71,7 @@ public:
     virtual bool seek(qint64 frame) = 0;
     virtual bool isSequential() = 0;
     virtual quint64 numberOfFrames() = 0;
-    virtual VideoSourcePlugin* format() = 0;
+    virtual VideoSourcePlugin* plugin() = 0;
 
 protected:
     FrameMetaData makeMetaData();
@@ -115,7 +115,6 @@ public:
     virtual SharedRawFrame createRawFrame() = 0;
     virtual SharedDecoder createDecoder() = 0;
     virtual Reader* reader() = 0;
-    virtual QSize frameSize() = 0;
 };
 
 Q_DECLARE_INTERFACE(VideoSourcePlugin,

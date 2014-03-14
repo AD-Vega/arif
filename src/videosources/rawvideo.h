@@ -48,7 +48,6 @@ public:
     SharedRawFrame createRawFrame();
     SharedDecoder createDecoder();
     Reader* reader();
-    QSize frameSize();
 
     static RawVideoSource* instance;
 
@@ -91,7 +90,7 @@ class RawVideoFrame: public RawFrame
 {
 public:
     SharedRawFrame copy();
-    VideoSourcePlugin* format();
+    VideoSourcePlugin* plugin();
     void serialize(QDataStream& s);
     void load(QDataStream& s);
 
@@ -107,7 +106,7 @@ class RawVideoDecoder: public Decoder
 public:
     RawVideoDecoder();
     const cv::Mat decode(RawFrame* in);
-    VideoSourcePlugin* format();
+    VideoSourcePlugin* plugin();
 
 private:
     QScopedPointer<QArvDecoder> thedecoder;
@@ -122,7 +121,7 @@ public:
     bool seek(qint64 frame);
     bool isSequential();
     quint64 numberOfFrames();
-    VideoSourcePlugin* format();
+    VideoSourcePlugin* plugin();
 
 public slots:
     void readFrame();

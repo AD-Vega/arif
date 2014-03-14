@@ -118,6 +118,10 @@ void ArifMainWindow::frameProcessed(SharedData data)
         // Disregard burnt pixels, so pick the 99% brightest.
         thresholdSpinbox->setValue(m(.99 * m.total()));
     }
+    if (!decodedImagePixelSize) {
+        decodedImagePixelSize = data->decoded.elemSize();
+        updateSettings();
+    }
 }
 
 void ArifMainWindow::on_processButton_toggled(bool checked)
@@ -246,9 +250,14 @@ void ArifMainWindow::updateSettings()
     settings.minimumQuality = minimumQualitySpinbox->value();
     settings.acceptancePercent = acceptanceSpinbox->value();
     settings.filterQueueLength = filterQueueSpinbox->value();
-    QSize fsize = settings.plugin->frameSize();
     // Pick the worst-case: 16-bit color image.
-    int mem = fsize.height() * fsize.width() * 2 * 3;
+    int mem = decodedImagePixelSize;
+    if (settings.doCrop) {
+        mem *= settings.cropWidth * settings.cropWidth;
+    } else {
+        auto size = videoWidget->getImageSize();
+        mem *= size.width() * size.height();
+    }
     mem *= settings.filterQueueLength;
     mem /= 1024*1024;
     memoryLabel->setText(QString("%1 Mb").arg(mem));
