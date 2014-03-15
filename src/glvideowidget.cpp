@@ -22,7 +22,10 @@
 #include <QStyleOption>
 
 GLVideoWidget::GLVideoWidget(QWidget* parent) :
-    QGLWidget(QGLFormat(QGL::NoDepthBuffer | QGL::NoSampleBuffers), parent),
+    QGLWidget(QGLFormat(QGL::NoDepthBuffer |
+                        QGL::SampleBuffers |
+                        QGL::Rgba),
+              parent),
     idleImageRenderer(QString("/usr/share/qarv/1/video-display.svgz")),
     idling(true), selecting(false),
     drawRectangle(false), fixedSelection(false), corner1(), corner2(),
@@ -140,6 +143,8 @@ void GLVideoWidget::paintGL()
         }
 
         if (!drawnObjects.isEmpty()) {
+            painter.setRenderHint(QPainter::Antialiasing);
+            painter.setRenderHint(QPainter::TextAntialiasing);
             for (const auto& object: drawnObjects) {
                 painter.setPen(object.pen);
                 painter.setBrush(object.brush);
