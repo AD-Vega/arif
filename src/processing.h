@@ -26,6 +26,7 @@
 #include <QRect>
 #include <QImage>
 #include <QPainterPath>
+#include <QPen>
 #include <opencv2/core/core.hpp>
 
 class ProcessingData;
@@ -70,6 +71,14 @@ struct Histograms {
     float red[256], green[256], blue[256];
 };
 
+struct PaintObject {
+    QPainterPath path;
+    QPen pen;
+    QBrush brush;
+};
+
+typedef QList<PaintObject> PaintObjects;
+
 /*
  * A pointer to this struct is given to a processing stage.
  * A stages are ordered, so each can count on the data from
@@ -111,7 +120,7 @@ struct ProcessingData {
     QSharedPointer<Histograms> histograms =
         QSharedPointer<Histograms>(new Histograms);
     // Any stage can draw into this when doRender == true.
-    QPainterPath painterPath;
+    PaintObjects paintObjects;
 
     // When using MinimumQuality filtering, the save routine will
     // set this, regardless of whether the image was actually saved.
@@ -127,7 +136,7 @@ struct ProcessingData {
         completedStages.clear();
         settings = s;
         doRender = false;
-        painterPath = QPainterPath();
+        paintObjects.clear();
     }
 };
 

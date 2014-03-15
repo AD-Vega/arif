@@ -65,10 +65,10 @@ void GLVideoWidget::swapFrames()
     update();
 }
 
-void GLVideoWidget::setDrawnPath(const QPainterPath& path)
+void GLVideoWidget::setDrawnPath(const PaintObjects& pos)
 {
-    if (path.isEmpty()) {
-        drawnPath = path;
+    if (pos.isEmpty()) {
+        drawnObjects.clear();
     } else {
         QTransform xform;
         QRectF fin(in);
@@ -80,9 +80,12 @@ void GLVideoWidget::setDrawnPath(const QPainterPath& path)
         to.pop_back();
         bool isPossible = QTransform::quadToQuad(from, to, xform);
         if (isPossible) {
-            drawnPath = xform.map(path);
+            drawnObjects = pos;
+            for (auto& object: drawnObjects) {
+                object.path = xform.map(object.path);
+            }
         } else {
-            drawnPath = QPainterPath();
+            drawnObjects.clear();
         }
     }
 }
@@ -136,11 +139,12 @@ void GLVideoWidget::paintGL()
             painter.drawRect(drawnRectangle);
         }
 
-        if (!drawnPath.isEmpty()) {
-            painter.setPen(blackpen);
-            painter.drawPath(drawnPath);
-            painter.setPen(whitepen);
-            painter.drawPath(drawnPath);
+        if (!drawnObjects.isEmpty()) {
+            for (const auto& object: drawnObjects) {
+                painter.setPen(object.pen);
+                painter.setBrush(object.brush);
+                painter.drawPath(object.path);
+            }
         }
     } else {
         QStyleOption opt;

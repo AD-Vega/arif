@@ -108,7 +108,7 @@ void ArifMainWindow::frameProcessed(SharedData data)
         // Just swap image data with the one currently rendered.
         videoWidget->unusedFrame()->swap(data->renderedFrame);
         videoWidget->swapFrames();
-        videoWidget->setDrawnPath(data->painterPath);
+        videoWidget->setDrawnPath(data->paintObjects);
         auto tmp = histogramWidget->unusedHistograms();
         histogramWidget->unusedHistograms() = data->histograms;
         data->histograms = tmp;

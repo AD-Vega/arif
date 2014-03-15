@@ -19,6 +19,8 @@
 #include "processing.h"
 #include <opencv2/imgproc/imgproc.hpp>
 #include <opencv2/highgui/highgui.hpp>
+#include <QFont>
+#include <QFontMetrics>
 
 void DecodeStage(SharedData d);
 void CropStage(SharedData d);
@@ -106,9 +108,43 @@ void CropStage(SharedData d)
     if (!imageRect.contains(cropRect)) {
         d->stageSuccessful = false;
         d->errorMessage = "Crop rectangle out of image bounds";
+        if (d->doRender) {
+            static const QPainterPath message = []{
+                QFont font;
+                font.setPixelSize(20);
+                QFontMetrics metrics(font);
+                QPainterPath path;
+                path.addText(-metrics.minLeftBearing() + 10,
+                             -metrics.descent() - 10,
+                             font,
+                             "Out of bounds!");
+                return path;
+            }();
+            PaintObject po1;
+            po1.pen.setColor(Qt::red);
+            po1.pen.setWidth(5);
+            po1.path.addRect(d->renderedFrame.rect());
+            PaintObject po2;
+            po2.pen.setColor(Qt::red);
+            po2.brush.setColor(Qt::red);
+            po2.brush.setStyle(Qt::SolidPattern);
+            po2.path = message;
+            po2.path.translate(0, d->renderedFrame.height());
+            d->paintObjects << po1 << po2;
+        }
     } else {
-        if (d->doRender)
-            d->painterPath.addRect(cropRect);
+        if (d->doRender) {
+            PaintObject po1;
+            po1.pen.setColor(Qt::black);
+            po1.pen.setWidth(0);
+            po1.path.addRect(cropRect);
+            PaintObject po2;
+            po2.pen.setColor(Qt::white);
+            po2.pen.setWidth(0);
+            po2.pen.setStyle(Qt::DotLine);
+            po2.path.addRect(cropRect);
+            d->paintObjects << po1 << po2;
+        }
         d->stageSuccessful = true;
         d->errorMessage.clear();
     }

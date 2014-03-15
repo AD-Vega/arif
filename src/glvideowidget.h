@@ -21,6 +21,7 @@
 #ifndef GLVIDEOWIDGET_H
 #define GLVIDEOWIDGET_H
 
+#include "processing.h"
 #include <QGLWidget>
 #include <QImage>
 #include <QMouseEvent>
@@ -38,7 +39,7 @@ public:
     QImage* unusedFrame();
     void swapFrames();
     void setImage(const QImage& image_ = QImage());
-    void setDrawnPath(const QPainterPath& path);
+    void setDrawnPath(const PaintObjects& pos);
     QSize getImageSize();
 
 public slots:
@@ -63,7 +64,7 @@ private:
     QRect rectangle, drawnRectangle;
     QSize fixedSize;
     QPen whitepen, blackpen;
-    QPainterPath drawnPath;
+    PaintObjects drawnObjects;
 };
 
 #endif // GLVIDEOWIDGET_H
