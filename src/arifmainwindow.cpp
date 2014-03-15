@@ -56,6 +56,8 @@ void ArifMainWindow::initialize()
     connect(cropCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
     connect(histogramLogarithmicCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
     connect(histogramLogarithmicCheck, SIGNAL(toggled(bool)), SLOT(getFrameToRender()));
+    connect(markClippedCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
+    connect(markClippedCheck, SIGNAL(toggled(bool)), SLOT(getFrameToRender()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -235,7 +237,7 @@ void ArifMainWindow::updateSettings()
     settings.cropWidth = cropWidthBox->value();
     settings.threshold = thresholdSpinbox->value();
     settings.logarithmicHistograms = histogramLogarithmicCheck->isChecked();
-    settings.markClipped = false;
+    settings.markClipped = markClippedCheck->isChecked();
     settings.noiseSigma = noiseSigmaSpinbox->value();
     settings.signalSigma = signalSigmaSpinbox->value();
     settings.saveImages = saveImagesCheck->isChecked();
@@ -330,6 +332,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/threshold", thresholdSpinbox->value());
     config.setValue("processing/crop", cropCheck->isChecked());
     config.setValue("processing/loghistogram", histogramLogarithmicCheck->isChecked());
+    config.setValue("processing/markclipped", markClippedCheck->isChecked());
     config.setValue("filtering/choice", filterMinimumQuality->isChecked());
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
@@ -349,6 +352,7 @@ void ArifMainWindow::restoreProgramSettings()
     thresholdSpinbox->setValue(config.value("processing/threshold", 0.0).toDouble());
     cropCheck->setChecked(config.value("processing/crop", true).toBool());
     histogramLogarithmicCheck->setChecked(config.value("processing/loghistogram").toBool());
+    markClippedCheck->setChecked(config.value("processing/markclipped").toBool());
     bool choice = config.value("filtering/choice", false).toBool();
     filterMinimumQuality->setChecked(choice);
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());

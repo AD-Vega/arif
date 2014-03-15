@@ -353,11 +353,22 @@
             </layout>
            </item>
            <item>
-            <widget class="QCheckBox" name="histogramLogarithmicCheck">
-             <property name="text">
-              <string>Logarithmic histogram</string>
-             </property>
-            </widget>
+            <layout class="QHBoxLayout" name="horizontalLayout_8">
+             <item>
+              <widget class="QCheckBox" name="histogramLogarithmicCheck">
+               <property name="text">
+                <string>Logarithmic histogram</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QCheckBox" name="markClippedCheck">
+               <property name="text">
+                <string>Mark overexposed pixels</string>
+               </property>
+              </widget>
+             </item>
+            </layout>
            </item>
            <item>
             <layout class="QHBoxLayout" name="horizontalLayout_7">
