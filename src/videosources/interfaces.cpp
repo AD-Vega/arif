@@ -53,3 +53,10 @@ FrameMetaData Reader::makeMetaData()
     metadata.frameOfSecond = ++frameOfSecond;
     return metadata;
 }
+
+static int registerTypes()
+{
+    qRegisterMetaType<SharedRawFrame>("SharedRawFrame");
+}
+
+static int __register = registerTypes();

@@ -29,6 +29,10 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QFile>
+#include <QMetaType>
+#include <QThread>
+#include <boost/asio.hpp>
+#include <functional>
 
 namespace RawVideo
 {
@@ -112,12 +116,31 @@ private:
     QScopedPointer<QArvDecoder> thedecoder;
 };
 
+// This class is a thread that runs the asio event loop.
+class AsioThread: public QThread
+{
+    Q_OBJECT
+
+public:
+    AsioThread(boost::asio::io_service* service):
+        QThread(), serviceptr(service) {}
+
+    void run() {
+        serviceptr->run();
+    }
+
+private:
+    boost::asio::io_service* serviceptr;
+};
+
+
 class RawVideoReader: public Reader
 {
     Q_OBJECT
 
 public:
     RawVideoReader();
+    ~RawVideoReader();
     bool seek(qint64 frame);
     bool isSequential();
     quint64 numberOfFrames();
@@ -126,9 +149,23 @@ public:
 public slots:
     void readFrame();
 
+private slots:
+    void asyncReadComplete(SharedRawFrame frame, QString error);
+
 private:
+    typedef std::function<void(const boost::system::error_code&,
+                               std::size_t)> asyncHandlerType;
+
     QFile file;
-    bool live, sequential;
+    boost::asio::io_service service;
+    boost::asio::posix::stream_descriptor stream;
+    boost::asio::io_service::work work;
+    AsioThread asioThread;
+    bool live;
+    SharedRawFrame currentlyReadFrame;
+    asyncHandlerType asyncHandler;
+    bool asyncReadRunning = false;
+    int requestedFramesCount = 0;
     friend class RawVideoSource;
 };
 

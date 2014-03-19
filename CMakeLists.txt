@@ -12,9 +12,10 @@ macro(set_prefixed varname string)
 endmacro(set_prefixed)
 
 find_path(QWT_INCLUDE qwt_plot.h PATH_SUFFIXES qwt6 qwt)
-find_package( OpenCV REQUIRED )
+find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-1 libswscale libavcodec libavutil)
 find_library(QWT_LIB NAMES qwt6 qwt)
+find_package(Boost COMPONENTS system REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${PKGCONFS_CFLAGS}")
@@ -71,4 +72,5 @@ target_link_libraries(arif
   ${QWT_LIB}
   ${PKGCONFS_LDFLAGS}
   ${OpenCV_LIBS}
+  ${Boost_LIBRARIES}
 )
