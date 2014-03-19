@@ -90,24 +90,16 @@ const cv::Mat RawVideoDecoder::decode(RawFrame* in)
     return thedecoder->getCvImage();
 }
 
-#include <QDebug>
-#include <QtConcurrentRun>
-
-static void runEventLoop(boost::asio::io_service* service)
-{
-    service->run();
-    qDebug() << "returning";
-}
-
-static void backgroundReading(boost::asio::io_service* service)
-{
-    service->run();
-}
-
 RawVideoReader::RawVideoReader():
-    file(RawVideoSource::instance->file),
     stream(service), work(service), asioThread(&service)
 {
+
+}
+
+RawVideoReader::RawVideoReader(QString filename):
+    RawVideoReader()
+{
+    file.setFileName(filename);
     file.open(QIODevice::ReadOnly);
     // Always go live unles we have a real file because
     // avoiding framedrop would be too bothersome otherwise.
@@ -115,43 +107,16 @@ RawVideoReader::RawVideoReader():
     if (!isSequential()) {
         file.seek(RawVideoSource::instance->headerBytes);
     } else {
-        int fd = file.handle();
-        uint hbytes = RawVideoSource::instance->headerBytes;
-        std::vector<char> buf(hbytes);
-        read(fd, buf.data(), hbytes);
-        RawVideoSource* s = RawVideoSource::instance;
-        currentlyReadFrame= s->createRawFrame();
-        RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-        f->frame.resize(s->frameBytes);
-        auto objectptr = this;
-        auto islive = live;
-        auto frame = currentlyReadFrame;
-        asyncHandler = [objectptr, frame, islive]
-                       (const boost::system::error_code& err,
-                        std::size_t bytes)
-        {
-            QString msg;
-            if (err) {
-                msg = "Error reading data:";
-                msg += QString::fromStdString(err.message());
-            }
-            QMetaObject::invokeMethod(objectptr, "asyncReadComplete",
-                                      Qt::QueuedConnection,
-                                      Q_ARG(SharedRawFrame, frame->copy()),
-                                      Q_ARG(QString, msg));
-        };
-        stream = decltype(stream)(service, fd);
-        stream.non_blocking(true);
-        // Launch the background thread that will perform reading.
-        // The 'work' object will make sure it never finishes.
-        asioThread.start();
-        // Get the ball rolling
-        if (live) {
-            RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-            auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
-            boost::asio::async_read(stream, buf, asyncHandler);
-        }
+        setupAsio(file.handle());
     }
+}
+
+RawVideoReader::RawVideoReader(FILE* processStream):
+    RawVideoReader()
+{
+    live = true;
+    process = processStream;
+    setupAsio(fileno(process));
 }
 
 RawVideoReader::~RawVideoReader()
@@ -159,6 +124,8 @@ RawVideoReader::~RawVideoReader()
     // Abort reading operations before object destruction starts.
     // This also quits the background thread.
     service.stop();
+    if (process)
+        pclose(process);
 }
 
 VideoSourcePlugin* RawVideoReader::plugin()
@@ -244,6 +211,45 @@ void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
     }
 }
 
+void RawVideoReader::setupAsio(int fd)
+{
+    uint hbytes = RawVideoSource::instance->headerBytes;
+    std::vector<char> buf(hbytes);
+    read(fd, buf.data(), hbytes);
+    RawVideoSource* s = RawVideoSource::instance;
+    currentlyReadFrame = s->createRawFrame();
+    RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
+    f->frame.resize(s->frameBytes);
+    auto objectptr = this;
+    auto islive = live;
+    auto frame = currentlyReadFrame;
+    asyncHandler = [objectptr, frame, islive]
+                   (const boost::system::error_code & err,
+                    std::size_t bytes)
+    {
+        QString msg;
+        if (err) {
+            msg = "Error reading data:";
+            msg += QString::fromStdString(err.message());
+        }
+        QMetaObject::invokeMethod(objectptr, "asyncReadComplete",
+                                  Qt::QueuedConnection,
+                                  Q_ARG(SharedRawFrame, frame->copy()),
+                                  Q_ARG(QString, msg));
+    };
+    stream = decltype(stream)(service, fd);
+    stream.non_blocking(true);
+    // Launch the background thread that will perform reading.
+    // The 'work' object will make sure it never finishes.
+    asioThread.start();
+    // Get the ball rolling
+    if (live) {
+        RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
+        auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
+        boost::asio::async_read(stream, buf, asyncHandler);
+    }
+}
+
 static void populateFormatSelector(QComboBox* sel)
 {
     QStringList formats;
@@ -301,7 +307,20 @@ RawSourceConfigWidget::RawSourceConfigWidget() :
 void RawSourceConfigWidget::checkConfig()
 {
     auto name = fileName->text();
-    if (QFileInfo(name).isReadable()) {
+    if (name.startsWith('<') ||
+        name.startsWith('>') ||
+        name.startsWith('|')) {
+        // Process
+        auto command = name.toLocal8Bit().data();
+        std::FILE* process = popen(++command, "r");
+        if (!process) {
+            QMessageBox tmp;
+            tmp.setWindowTitle("Process error");
+            tmp.setText("Could not launch specified command.");
+            tmp.exec();
+            return;
+        }
+
         RawVideoSource* s = RawVideoSource::instance;
         s->file = name;
         s->size = QSize(width->value(), height->value());
@@ -310,7 +329,19 @@ void RawSourceConfigWidget::checkConfig()
         s->frameBytes = avpicture_get_size(s->pixfmt,
                                            s->size.width(),
                                            s->size.height());
-        s->reader_.reset(new RawVideoReader);
+        s->reader_.reset(new RawVideoReader(process));
+        saveConfig();
+        emit configurationComplete();
+    } else if (QFileInfo(name).isReadable()) {
+        RawVideoSource* s = RawVideoSource::instance;
+        s->file = name;
+        s->size = QSize(width->value(), height->value());
+        s->pixfmt = av_get_pix_fmt(formatSelector->currentText().toAscii());
+        s->headerBytes = header->value();
+        s->frameBytes = avpicture_get_size(s->pixfmt,
+                                           s->size.width(),
+                                           s->size.height());
+        s->reader_.reset(new RawVideoReader(name));
         saveConfig();
         emit configurationComplete();
     } else {

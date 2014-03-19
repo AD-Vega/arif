@@ -33,6 +33,7 @@
 #include <QThread>
 #include <boost/asio.hpp>
 #include <functional>
+#include <cstdio>
 
 namespace RawVideo
 {
@@ -139,7 +140,8 @@ class RawVideoReader: public Reader
     Q_OBJECT
 
 public:
-    RawVideoReader();
+    RawVideoReader(QString filename);
+    RawVideoReader(std::FILE* processStream);
     ~RawVideoReader();
     bool seek(qint64 frame);
     bool isSequential();
@@ -153,13 +155,16 @@ private slots:
     void asyncReadComplete(SharedRawFrame frame, QString error);
 
 private:
+    RawVideoReader();
+    void setupAsio(int fd);
     typedef std::function<void(const boost::system::error_code&,
                                std::size_t)> asyncHandlerType;
 
-    QFile file;
     boost::asio::io_service service;
     boost::asio::posix::stream_descriptor stream;
     boost::asio::io_service::work work;
+    QFile file;
+    std::FILE* process = nullptr;
     AsioThread asioThread;
     bool live;
     SharedRawFrame currentlyReadFrame;
