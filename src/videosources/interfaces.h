@@ -78,6 +78,9 @@ protected:
 
 public slots:
     // Used by non-live sources to throttle reading.
+    // None-live sources should emit frameReady()
+    // _immediately_, in th main thread; foreman is
+    // ready _now_ and may be busy later.
     // Live sources ignore this and emit frameReady()
     // for every frame.
     virtual void readFrame() = 0;
