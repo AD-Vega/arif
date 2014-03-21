@@ -166,6 +166,7 @@ private:
     boost::asio::io_service service;
     boost::asio::posix::stream_descriptor stream;
     boost::asio::io_service::work work;
+    boost::system::error_code errcode;
     QFile file;
     std::FILE* process = nullptr;
     AsioThread asioThread;

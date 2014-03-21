@@ -176,6 +176,12 @@ void RawVideoReader::readFrame()
             emit error("Error opening file.");
         }
     } else {
+        if (errcode) {
+            QString msg = "Error reading data: ";
+            msg += QString::fromStdString(errcode.message());
+            emit error(msg);
+            return;
+        }
         if (!live) {
             if (!frameQueue.isEmpty()) {
                 bool full = frameQueue.size() == frameQueueMax;
@@ -196,9 +202,6 @@ void RawVideoReader::readFrame()
 void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
 {
     if (!err.isNull()) {
-        if (err == "EOF")
-            emit atEnd();
-        else
             emit error(err);
     } else {
         if (live) {
@@ -217,9 +220,6 @@ void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
 
 void RawVideoReader::setupAsio(int fd)
 {
-    uint hbytes = RawVideoSource::instance->headerBytes;
-    std::vector<char> buf(hbytes);
-    read(fd, buf.data(), hbytes);
     RawVideoSource* s = RawVideoSource::instance;
     currentlyReadFrame = s->createRawFrame();
     RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
@@ -231,12 +231,8 @@ void RawVideoReader::setupAsio(int fd)
     {
         QString msg;
         if (err) {
-            if (err.value() == boost::asio::error::eof) {
-                msg = "EOF";
-            } else {
-                msg = "Error reading data: ";
-                msg += QString::fromStdString(err.message());
-            }
+            msg = "Error reading data: ";
+            msg += QString::fromStdString(err.message());
         }
         QMetaObject::invokeMethod(this, "asyncReadComplete",
                                   Qt::QueuedConnection,
@@ -246,12 +242,24 @@ void RawVideoReader::setupAsio(int fd)
             asioRead();
     };
     stream = decltype(stream)(service, fd);
-    stream.non_blocking(true);
-    // Launch the background thread that will perform reading.
-    // The 'work' object will make sure it never finishes.
-    asioThread.start();
-    // Get the ball rolling
-    asioRead();
+
+    // Read the header.
+    uint hbytes = RawVideoSource::instance->headerBytes;
+    std::vector<char> bufv(hbytes);
+    auto buf = boost::asio::buffer(bufv.data(), hbytes);
+    try {
+        boost::asio::read(stream, buf);
+    } catch (boost::system::system_error err) {
+        errcode = err.code();
+    }
+    if (!errcode) {
+        stream.non_blocking(true);
+        // Launch the background thread that will perform reading.
+        // The 'work' object will make sure it never finishes.
+        asioThread.start();
+        // Get the ball rolling
+        asioRead();
+    }
 }
 
 void RawVideoReader::asioRead()
