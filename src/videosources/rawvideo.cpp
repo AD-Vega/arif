@@ -43,7 +43,7 @@ RawVideoSource::RawVideoSource(QObject* parent): QObject(parent)
 
 SharedRawFrame RawVideoFrame::copy()
 {
-    SharedRawFrame f(new RawVideoFrame);
+    SharedRawFrame f = RawVideoSource::instance->createRawFrame();
     RawVideoFrame* r = static_cast<RawVideoFrame*>(f.data());
     *r = *this;
     return f;
@@ -90,6 +90,8 @@ const cv::Mat RawVideoDecoder::decode(RawFrame* in)
     return thedecoder->getCvImage();
 }
 
+static const int frameQueueMax = QThread::idealThreadCount() + 1;
+
 RawVideoReader::RawVideoReader():
     stream(service), work(service), asioThread(&service)
 {
@@ -101,9 +103,7 @@ RawVideoReader::RawVideoReader(QString filename):
 {
     file.setFileName(filename);
     file.open(QIODevice::ReadOnly);
-    // Always go live unles we have a real file because
-    // avoiding framedrop would be too bothersome otherwise.
-    live = file.isSequential();
+    live = false;
     if (!isSequential()) {
         file.seek(RawVideoSource::instance->headerBytes);
     } else {
@@ -114,7 +114,7 @@ RawVideoReader::RawVideoReader(QString filename):
 RawVideoReader::RawVideoReader(FILE* processStream):
     RawVideoReader()
 {
-    live = true;
+    live = false;
     process = processStream;
     setupAsio(fileno(process));
 }
@@ -153,7 +153,7 @@ bool RawVideoReader::seek(qint64 frame)
     RawVideoSource* s = RawVideoSource::instance;
     return file.seek(frame * s->frameBytes + s->headerBytes);
 }
-
+#include <QDebug>
 void RawVideoReader::readFrame()
 {
     RawVideoSource* s = RawVideoSource::instance;
@@ -177,13 +177,17 @@ void RawVideoReader::readFrame()
         }
     } else {
         if (!live) {
-            if (!asyncReadRunning) {
-                asyncReadRunning = true;
-                RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-                auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
-                boost::asio::async_read(stream, buf, asyncHandler);
+            if (!frameQueue.isEmpty()) {
+                bool full = frameQueue.size() == frameQueueMax;
+                emit frameReady(frameQueue.dequeue());
+                if (full) {
+                    // Reading was stopped, start it again.
+                    asioRead();
+                }
             } else {
-                requestedFramesCount++;
+                // Fhe foreman managed to empty the queue, which means that
+                // it is surely fast enough to take this frame a bit later.
+                readerSlowEmitNextFrame = true;
             }
         }
     }
@@ -194,20 +198,17 @@ void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
     if (!err.isNull()) {
         emit error(err);
     } else {
-        RawVideoSource* s = RawVideoSource::instance;
         if (live) {
-            RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-            auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
-            boost::asio::async_read(stream, buf, asyncHandler);
-        } else if (requestedFramesCount > 0) {
-            --requestedFramesCount;
-            RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-            auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
-            boost::asio::async_read(stream, buf, asyncHandler);
+            emit frameReady(frame);
+        } else if (readerSlowEmitNextFrame) {
+            readerSlowEmitNextFrame = false;
+            asioRead();
+            emit frameReady(frame);
         } else {
-            asyncReadRunning = false;
+            frameQueue.enqueue(frame);
+            if (frameQueue.size() < frameQueueMax)
+                asioRead();
         }
-        emit frameReady(frame);
     }
 }
 
@@ -220,10 +221,8 @@ void RawVideoReader::setupAsio(int fd)
     currentlyReadFrame = s->createRawFrame();
     RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
     f->frame.resize(s->frameBytes);
-    auto objectptr = this;
-    auto islive = live;
     auto frame = currentlyReadFrame;
-    asyncHandler = [objectptr, frame, islive]
+    asyncHandler = [this, frame]
                    (const boost::system::error_code & err,
                     std::size_t bytes)
     {
@@ -232,10 +231,12 @@ void RawVideoReader::setupAsio(int fd)
             msg = "Error reading data:";
             msg += QString::fromStdString(err.message());
         }
-        QMetaObject::invokeMethod(objectptr, "asyncReadComplete",
+        QMetaObject::invokeMethod(this, "asyncReadComplete",
                                   Qt::QueuedConnection,
                                   Q_ARG(SharedRawFrame, frame->copy()),
                                   Q_ARG(QString, msg));
+        if (live)
+            asioRead();
     };
     stream = decltype(stream)(service, fd);
     stream.non_blocking(true);
@@ -243,11 +244,15 @@ void RawVideoReader::setupAsio(int fd)
     // The 'work' object will make sure it never finishes.
     asioThread.start();
     // Get the ball rolling
-    if (live) {
-        RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-        auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
-        boost::asio::async_read(stream, buf, asyncHandler);
-    }
+    asioRead();
+}
+
+void RawVideoReader::asioRead()
+{
+    RawVideoSource* s = RawVideoSource::instance;
+    RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
+    auto buf = boost::asio::buffer(f->frame.data(), s->frameBytes);
+    boost::asio::async_read(stream, buf, asyncHandler);
 }
 
 static void populateFormatSelector(QComboBox* sel)

@@ -31,6 +31,7 @@
 #include <QFile>
 #include <QMetaType>
 #include <QThread>
+#include <QQueue>
 #include <boost/asio.hpp>
 #include <functional>
 #include <cstdio>
@@ -157,6 +158,7 @@ private slots:
 private:
     RawVideoReader();
     void setupAsio(int fd);
+    void asioRead(); // called from asio thread when live, main thread otherwise.
     typedef std::function<void(const boost::system::error_code&,
                                std::size_t)> asyncHandlerType;
 
@@ -168,9 +170,9 @@ private:
     AsioThread asioThread;
     bool live;
     SharedRawFrame currentlyReadFrame;
+    QQueue<SharedRawFrame> frameQueue;
     asyncHandlerType asyncHandler;
-    bool asyncReadRunning = false;
-    int requestedFramesCount = 0;
+    bool readerSlowEmitNextFrame = false;
     friend class RawVideoSource;
 };
 
