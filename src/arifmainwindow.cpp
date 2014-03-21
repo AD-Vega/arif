@@ -145,9 +145,9 @@ void ArifMainWindow::on_processButton_toggled(bool checked)
         }
         foreman->start();
     } else {
-        foreman->stop();
         processButton->setEnabled(false);
         // Reenable once foreman actually finishes.
+        foreman->stop();
     }
     bool haveFile = !checked && !settings.plugin->reader()->isSequential();
     acceptanceEntireFileCheck->setEnabled(haveFile);
