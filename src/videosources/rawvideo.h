@@ -81,6 +81,7 @@ public:
 private slots:
     void checkConfig();
     void getFile();
+    void checkFilename(QString name);
 
 private:
     void saveConfig();
@@ -88,7 +89,7 @@ private:
 
     QLineEdit* fileName;
     QSpinBox* width, * height, * header;
-    QCheckBox* autoContinuousCheckBox;
+    QCheckBox* liveCheckBox;
     QComboBox* formatSelector;
 };
 
@@ -141,8 +142,8 @@ class RawVideoReader: public Reader
     Q_OBJECT
 
 public:
-    RawVideoReader(QString filename);
-    RawVideoReader(std::FILE* processStream);
+    RawVideoReader(QString filename, bool isLive);
+    RawVideoReader(std::FILE* processStream, bool isLive);
     ~RawVideoReader();
     bool seek(qint64 frame);
     bool isSequential();

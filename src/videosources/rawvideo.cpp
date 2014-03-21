@@ -98,12 +98,12 @@ RawVideoReader::RawVideoReader():
 
 }
 
-RawVideoReader::RawVideoReader(QString filename):
+RawVideoReader::RawVideoReader(QString filename, bool isLive):
     RawVideoReader()
 {
     file.setFileName(filename);
     file.open(QIODevice::ReadOnly);
-    live = false;
+    live = file.isSequential() && isLive;
     if (!isSequential()) {
         file.seek(RawVideoSource::instance->headerBytes);
     } else {
@@ -111,10 +111,10 @@ RawVideoReader::RawVideoReader(QString filename):
     }
 }
 
-RawVideoReader::RawVideoReader(FILE* processStream):
+RawVideoReader::RawVideoReader(FILE* processStream, bool isLive):
     RawVideoReader()
 {
-    live = false;
+    live = isLive;
     process = processStream;
     setupAsio(fileno(process));
 }
@@ -291,6 +291,7 @@ RawSourceConfigWidget::RawSourceConfigWidget() :
     fileInputRow->addWidget(openFileDialog);
     layout->addRow("Input file:", fileInputRow);
     this->connect(openFileDialog, SIGNAL(clicked(bool)), SLOT(getFile()));
+    connect(fileName, SIGNAL(textChanged(QString)), SLOT(checkFilename(QString)));
 
     formatSelector = new QComboBox;
     populateFormatSelector(formatSelector);
@@ -310,10 +311,21 @@ RawSourceConfigWidget::RawSourceConfigWidget() :
     layout->addRow("Width:", width);
     layout->addRow("Height:", height);
 
+    liveCheckBox = new QCheckBox("Live data, read continuously");
+    layout->addRow(liveCheckBox);
+
     auto finishButton = new QPushButton("Finish");
     layout->addRow(finishButton);
     this->connect(finishButton, SIGNAL(clicked(bool)), SLOT(checkConfig()));
     restoreConfig();
+}
+
+void RawSourceConfigWidget::checkFilename(QString name)
+{
+    if (QFileInfo(name).isFile())
+        liveCheckBox->setEnabled(false);
+    else
+        liveCheckBox->setEnabled(true);
 }
 
 void RawSourceConfigWidget::checkConfig()
@@ -341,7 +353,7 @@ void RawSourceConfigWidget::checkConfig()
         s->frameBytes = avpicture_get_size(s->pixfmt,
                                            s->size.width(),
                                            s->size.height());
-        s->reader_.reset(new RawVideoReader(process));
+        s->reader_.reset(new RawVideoReader(process, liveCheckBox->isChecked()));
         saveConfig();
         emit configurationComplete();
     } else if (QFileInfo(name).isReadable()) {
@@ -353,7 +365,7 @@ void RawSourceConfigWidget::checkConfig()
         s->frameBytes = avpicture_get_size(s->pixfmt,
                                            s->size.width(),
                                            s->size.height());
-        s->reader_.reset(new RawVideoReader(name));
+        s->reader_.reset(new RawVideoReader(name, liveCheckBox->isChecked()));
         saveConfig();
         emit configurationComplete();
     } else {
@@ -382,6 +394,7 @@ void RawSourceConfigWidget::saveConfig()
     config.setValue("header_bytes", header->value());
     config.setValue("width", width->value());
     config.setValue("height", height->value());
+    config.setValue("live", liveCheckBox->isChecked());
 }
 
 void RawSourceConfigWidget::restoreConfig()
@@ -394,6 +407,7 @@ void RawSourceConfigWidget::restoreConfig()
     header->setValue(config.value("header_bytes").toInt());
     width->setValue(config.value("width", 640).toInt());
     height->setValue(config.value("height", 480).toInt());
+    liveCheckBox->setChecked(config.value("live", false).toBool());
 }
 
 QString RawVideoSource::name()
