@@ -135,7 +135,7 @@ VideoSourcePlugin* RawVideoReader::plugin()
 
 bool RawVideoReader::isSequential()
 {
-    return live || file.isSequential();
+    return live || process || file.isSequential();
 }
 
 quint64 RawVideoReader::numberOfFrames()
@@ -153,7 +153,7 @@ bool RawVideoReader::seek(qint64 frame)
     RawVideoSource* s = RawVideoSource::instance;
     return file.seek(frame * s->frameBytes + s->headerBytes);
 }
-#include <QDebug>
+
 void RawVideoReader::readFrame()
 {
     RawVideoSource* s = RawVideoSource::instance;
@@ -196,7 +196,10 @@ void RawVideoReader::readFrame()
 void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
 {
     if (!err.isNull()) {
-        emit error(err);
+        if (err == "EOF")
+            emit atEnd();
+        else
+            emit error(err);
     } else {
         if (live) {
             emit frameReady(frame);
@@ -228,8 +231,12 @@ void RawVideoReader::setupAsio(int fd)
     {
         QString msg;
         if (err) {
-            msg = "Error reading data:";
-            msg += QString::fromStdString(err.message());
+            if (err.value() == boost::asio::error::eof) {
+                msg = "EOF";
+            } else {
+                msg = "Error reading data: ";
+                msg += QString::fromStdString(err.message());
+            }
         }
         QMetaObject::invokeMethod(this, "asyncReadComplete",
                                   Qt::QueuedConnection,

@@ -89,6 +89,8 @@ void ArifMainWindow::initialize()
         txt += " (" + tr("%1 frames") + ")";
         txt = txt.arg(reader->numberOfFrames());
         acceptanceEntireFileCheck->setText(txt);
+    } else {
+        seekSlider->setVisible(false);
     }
 
     printActiveThreads();
