@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>973</width>
-    <height>630</height>
+    <height>746</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -308,7 +308,7 @@
         <item>
          <widget class="QGroupBox" name="imageSettingsGroup">
           <property name="title">
-           <string>Image saving and display</string>
+           <string>Image saving, display and graphs</string>
           </property>
           <layout class="QVBoxLayout" name="verticalLayout_6">
            <item>
@@ -328,12 +328,38 @@
                <property name="minimum">
                 <number>1</number>
                </property>
+               <property name="maximum">
+                <number>999</number>
+               </property>
+               <property name="value">
+                <number>10</number>
+               </property>
               </widget>
              </item>
              <item>
               <widget class="QLabel" name="label_2">
                <property name="text">
-                <string>frame</string>
+                <string>frame. Short graph shows</string>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QSpinBox" name="shortGraphLength">
+               <property name="minimum">
+                <number>1</number>
+               </property>
+               <property name="maximum">
+                <number>999999999</number>
+               </property>
+               <property name="value">
+                <number>1000</number>
+               </property>
+              </widget>
+             </item>
+             <item>
+              <widget class="QLabel" name="label_10">
+               <property name="text">
+                <string>frames.</string>
                </property>
               </widget>
              </item>
@@ -489,6 +515,18 @@
    </attribute>
    <widget class="GLHistogramWidget" name="histogramWidget"/>
   </widget>
+  <widget class="QDockWidget" name="qualityGraphDock">
+   <property name="features">
+    <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
+   </property>
+   <property name="windowTitle">
+    <string>arif quality graph</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QualityGraph" name="qualityGraph"/>
+  </widget>
  </widget>
  <customwidgets>
   <customwidget>
@@ -501,6 +539,12 @@
    <class>GLHistogramWidget</class>
    <extends>QWidget</extends>
    <header>glhistogramwidget.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QualityGraph</class>
+   <extends>QWidget</extends>
+   <header>plotwidgets.h</header>
    <container>1</container>
   </customwidget>
  </customwidgets>

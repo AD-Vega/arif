@@ -74,6 +74,8 @@ void ArifMainWindow::initialize()
     connect(foreman.data(),
             SIGNAL(frameProcessed(SharedData)),
             SLOT(frameProcessed(SharedData)));
+    connect(foreman.data(), SIGNAL(frameProcessed(SharedData)),
+            qualityGraph, SLOT(addFrameStats(SharedData)));
     connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
@@ -101,6 +103,9 @@ void ArifMainWindow::requestRendering()
     if (++finishedFrameCounter > displayInterval->value()) {
         foreman->renderNextFrame();
         finishedFrameCounter = 0;
+        qualityGraph->setShortGraphMaxFrames(shortGraphLength->value());
+        qualityGraph->rescaleAxes();
+        qualityGraph->replot();
     }
 }
 
@@ -339,6 +344,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
     config.setValue("filtering/filterqueue", filterQueueSpinbox->value());
+    config.setValue("display/shortgraphlength", shortGraphLength->value());
 }
 
 void ArifMainWindow::restoreProgramSettings()
@@ -346,7 +352,7 @@ void ArifMainWindow::restoreProgramSettings()
     QSettings config;
     restoreGeometry(config.value("mainwindow/geometry").toByteArray());
     restoreState(config.value("mainwindow/state").toByteArray());
-    displayInterval->setValue(config.value("mainwindow/displayinterval", 1).toInt());
+    displayInterval->setValue(config.value("mainwindow/displayinterval", 10).toInt());
     cropWidthBox->setValue(config.value("processing/cropwidth", 100).toInt());
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
     noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
@@ -360,4 +366,5 @@ void ArifMainWindow::restoreProgramSettings()
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());
     acceptanceSpinbox->setValue(config.value("filtering/acceptancerate", 100).toInt());
     filterQueueSpinbox->setValue(config.value("filtering/filterqueue", 10).toInt());
+    shortGraphLength->setValue(config.value("display/shortgraphlength", 1000).toInt());
 }

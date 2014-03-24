@@ -46,6 +46,7 @@ set_prefixed(arif_SRC src/
   sourceselectionwindow.cpp
   glhistogramwidget.cpp
   qcustomplot.cpp
+  plotwidgets.cpp
 )
 set_prefixed(arif_MOC src/
   ${arif_videosources_MOC}
@@ -55,6 +56,7 @@ set_prefixed(arif_MOC src/
   sourceselectionwindow.h
   glhistogramwidget.h
   qcustomplot.h
+  plotwidgets.h
 )
 qt4_wrap_ui(arif_UI
   ${arif_UI_pre}
