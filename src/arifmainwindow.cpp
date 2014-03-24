@@ -32,6 +32,12 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
 {
     settings.plugin = plugin;
     setupUi(this);
+    connect(displayCheck, SIGNAL(toggled(bool)),
+            videoDock, SLOT(setVisible(bool)));
+    connect(displayCheck, SIGNAL(toggled(bool)),
+            histogramDock, SLOT(setVisible(bool)));
+    connect(displayCheck, SIGNAL(toggled(bool)),
+            qualityGraphDock, SLOT(setVisible(bool)));
     restoreProgramSettings();
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));
@@ -101,11 +107,13 @@ void ArifMainWindow::initialize()
 void ArifMainWindow::requestRendering()
 {
     if (++finishedFrameCounter > displayInterval->value()) {
-        foreman->renderNextFrame();
         finishedFrameCounter = 0;
-        qualityGraph->setShortGraphMaxFrames(shortGraphLength->value());
-        qualityGraph->rescaleAxes();
-        qualityGraph->replot();
+        if (displayCheck->isChecked()) {
+            foreman->renderNextFrame();
+            qualityGraph->setShortGraphMaxFrames(shortGraphLength->value());
+            qualityGraph->rescaleAxes();
+            qualityGraph->replot();
+        }
     }
 }
 
@@ -345,6 +353,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
     config.setValue("filtering/filterqueue", filterQueueSpinbox->value());
     config.setValue("display/shortgraphlength", shortGraphLength->value());
+    config.setValue("display/displayenabled", displayCheck->isChecked());
 }
 
 void ArifMainWindow::restoreProgramSettings()
@@ -367,4 +376,5 @@ void ArifMainWindow::restoreProgramSettings()
     acceptanceSpinbox->setValue(config.value("filtering/acceptancerate", 100).toInt());
     filterQueueSpinbox->setValue(config.value("filtering/filterqueue", 10).toInt());
     shortGraphLength->setValue(config.value("display/shortgraphlength", 1000).toInt());
+    displayCheck->setChecked(config.value("display/displayenabled", true).toBool());
 }
