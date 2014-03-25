@@ -23,7 +23,6 @@
 QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
 {
     QStyleOption style;
-    setAntialiasedElements(QCP::aeNone);
     longGraph = addGraph(xAxis, yAxis);
     shortGraph = addGraph(xAxis2, yAxis);
 
@@ -50,6 +49,8 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     longGraph->setPen(QPen(Qt::blue));
     shortGraph->setPen(QPen(Qt::red));
     setBackground(style.palette.background());
+
+    setNotAntialiasedElements(QCP::aeAll);
 }
 
 void QualityGraph::setShortGraphMaxFrames(uint frames)
