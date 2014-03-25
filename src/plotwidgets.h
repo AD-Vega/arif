@@ -32,6 +32,7 @@ public:
 
 public slots:
     void addFrameStats(SharedData data);
+    void clear();
 
 private:
     QCPGraph* longGraph;

@@ -38,6 +38,8 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
             histogramDock, SLOT(setVisible(bool)));
     connect(displayCheck, SIGNAL(toggled(bool)),
             qualityGraphDock, SLOT(setVisible(bool)));
+    connect(clearGraphsButton, SIGNAL(clicked(bool)),
+            qualityGraph, SLOT(clear()));
     restoreProgramSettings();
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));

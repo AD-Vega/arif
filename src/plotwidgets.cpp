@@ -26,19 +26,22 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     longGraph = addGraph(xAxis, yAxis);
     shortGraph = addGraph(xAxis2, yAxis);
 
+    Qt::GlobalColor color1 = Qt::green;
+    Qt::GlobalColor color2 = Qt::red;
+
     xAxis->setLabel("All frames");
-    xAxis->setLabelColor(Qt::blue);
-    xAxis->setTickLabelColor(Qt::blue);
-    xAxis->setTickPen(QPen(Qt::blue));
-    xAxis->setBasePen(QPen(Qt::blue));
+    xAxis->setLabelColor(color1);
+    xAxis->setTickLabelColor(color1);
+    xAxis->setTickPen(QPen(color1));
+    xAxis->setBasePen(QPen(color1));
 
     xAxis2->setLabel("Last few frames");
     xAxis2->setVisible(true);
-    xAxis2->setTickPen(QPen(Qt::red));
-    xAxis2->setLabelColor(Qt::red);
-    xAxis2->setTickLabelColor(Qt::red);
-    xAxis2->setTickPen(QPen(Qt::red));
-    xAxis2->setBasePen(QPen(Qt::red));
+    xAxis2->setTickPen(QPen(color2));
+    xAxis2->setLabelColor(color2);
+    xAxis2->setTickLabelColor(color2);
+    xAxis2->setTickPen(QPen(color2));
+    xAxis2->setBasePen(QPen(color2));
 
     yAxis->setLabel("Quality");
     yAxis->setLabelColor(style.palette.color(QPalette::Text));
@@ -46,11 +49,12 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     yAxis->setTickPen(style.palette.color(QPalette::Text));
     yAxis->setBasePen(style.palette.color(QPalette::Text));
 
-    longGraph->setPen(QPen(Qt::blue));
-    shortGraph->setPen(QPen(Qt::red));
+    longGraph->setPen(QPen(color1));
+    shortGraph->setPen(QPen(color2));
     setBackground(style.palette.background());
 
     setNotAntialiasedElements(QCP::aeAll);
+    setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
 }
 
 void QualityGraph::setShortGraphMaxFrames(uint frames)
@@ -69,4 +73,11 @@ void QualityGraph::addFrameStats(SharedData data)
             shortGraph->removeDataBefore(counter - shortLength);
         }
     }
+}
+
+void QualityGraph::clear()
+{
+    longGraph->clearData();
+    shortGraph->clearData();
+    replot();
 }
