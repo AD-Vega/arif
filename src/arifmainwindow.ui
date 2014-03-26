@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>973</width>
-    <height>746</height>
+    <width>1179</width>
+    <height>748</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -604,7 +604,7 @@
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
-    <string>Arif histogram</string>
+    <string>Arif image histogram</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>8</number>
@@ -616,12 +616,21 @@
     <set>QDockWidget::DockWidgetFloatable|QDockWidget::DockWidgetMovable</set>
    </property>
    <property name="windowTitle">
-    <string>arif quality graph</string>
+    <string>Arif quality graph</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>1</number>
    </attribute>
    <widget class="QualityGraph" name="qualityGraph"/>
+  </widget>
+  <widget class="QDockWidget" name="qualityHistogramDock">
+   <property name="windowTitle">
+    <string>Arif quality histogram</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>1</number>
+   </attribute>
+   <widget class="QualityHistogram" name="qualityHistogram"/>
   </widget>
  </widget>
  <customwidgets>
@@ -639,6 +648,12 @@
   </customwidget>
   <customwidget>
    <class>QualityGraph</class>
+   <extends>QWidget</extends>
+   <header>plotwidgets.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>QualityHistogram</class>
    <extends>QWidget</extends>
    <header>plotwidgets.h</header>
    <container>1</container>

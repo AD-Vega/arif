@@ -21,6 +21,8 @@
 
 #include "qcustomplot.h"
 #include "processing.h"
+#include <boost/accumulators/statistics/density.hpp>
+#include <boost/accumulators/accumulators.hpp>
 
 class QualityGraph: public QCustomPlot
 {
@@ -33,14 +35,40 @@ public:
 public slots:
     void addFrameStats(SharedData data);
     void clear();
+    void draw();
 
 private:
     QCPGraph* longGraph;
     QCPGraph* shortGraph;
-
-private:
     uint shortLength = 100;
     unsigned long long counter = 0; // provides x values
+};
+
+class QualityHistogram: public QCustomPlot
+{
+    Q_OBJECT
+
+public:
+    explicit QualityHistogram(QWidget* parent = 0);
+    void setShortGraphMaxFrames(uint frames);
+
+public slots:
+    void addFrameStats(SharedData data);
+    void clear();
+    void draw();
+
+private:
+    void showSamplingText();
+
+private:
+    QCPBars* graph;
+    QCPItemText* samplingLabel;
+    bool sampling;
+    uint shortLength = 100;
+    boost::accumulators::accumulator_set < double,
+          boost::accumulators::features<boost::accumulators::tag::density>>
+          accumulator;
+    unsigned long long counter = 0;
 };
 
 #endif

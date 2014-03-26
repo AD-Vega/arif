@@ -20,14 +20,16 @@
 #include <QStyleOption>
 #include <QDebug>
 
+static const Qt::GlobalColor color1 = Qt::green;
+static const Qt::GlobalColor color2 = Qt::red;
+
+static const int N = 30, n = 100;
+
 QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
 {
     QStyleOption style;
     longGraph = addGraph(xAxis, yAxis);
     shortGraph = addGraph(xAxis2, yAxis);
-
-    Qt::GlobalColor color1 = Qt::green;
-    Qt::GlobalColor color2 = Qt::red;
 
     xAxis->setLabel("All frames");
     xAxis->setLabelColor(color1);
@@ -35,7 +37,7 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     xAxis->setTickPen(QPen(color1));
     xAxis->setBasePen(QPen(color1));
 
-    xAxis2->setLabel("Last few frames");
+    xAxis2->setLabel("Last several frames");
     xAxis2->setVisible(true);
     xAxis2->setTickPen(QPen(color2));
     xAxis2->setLabelColor(color2);
@@ -80,4 +82,102 @@ void QualityGraph::clear()
     longGraph->clearData();
     shortGraph->clearData();
     replot();
+}
+
+void QualityGraph::draw()
+{
+    rescaleAxes();
+    replot();
+}
+
+QualityHistogram::QualityHistogram(QWidget* parent):
+    QCustomPlot(parent),
+    accumulator(boost::accumulators::tag::density::cache_size = n,
+                boost::accumulators::tag::density::num_bins = N)
+{
+    QStyleOption style;
+    graph = new QCPBars(xAxis, yAxis);
+    addPlottable(graph);
+
+    xAxis->setLabel("Quality of frames");
+    xAxis->setLabelColor(color1);
+    xAxis->setTickLabelColor(color1);
+    xAxis->setTickPen(QPen(color1));
+    xAxis->setBasePen(QPen(color1));
+
+    yAxis->setLabel("Percentage of frames");
+    yAxis->setLabelColor(style.palette.color(QPalette::Text));
+    yAxis->setTickLabelColor(style.palette.color(QPalette::Text));
+    yAxis->setTickPen(style.palette.color(QPalette::Text));
+    yAxis->setBasePen(style.palette.color(QPalette::Text));
+
+    QColor tmp = color1;
+    tmp.setAlpha(64);
+    graph->setPen(QPen(color1));
+    graph->setBrush(tmp);
+    setBackground(style.palette.background());
+
+    showSamplingText();
+
+    setNotAntialiasedElements(QCP::aeAll);
+    setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
+}
+
+void QualityHistogram::setShortGraphMaxFrames(uint frames)
+{
+    shortLength = frames;
+}
+
+void QualityHistogram::addFrameStats(SharedData data)
+{
+    if (data->stageSuccessful
+            && data->completedStages.contains("EstimateQuality")) {
+        ++counter;
+        accumulator(data->quality);
+    }
+}
+
+void QualityHistogram::clear()
+{
+    accumulator = decltype(accumulator)(boost::accumulators::tag::density::cache_size = n,
+                                        boost::accumulators::tag::density::num_bins = N);
+    graph->clearData();
+    showSamplingText();
+    replot();
+}
+
+void QualityHistogram::draw()
+{
+    if (counter > n) {
+        auto histogram = boost::accumulators::density(accumulator);
+        if (sampling) {
+            removeItem(samplingLabel);
+            sampling = false;
+            // Set bar width.
+            auto v2 = histogram.begin();
+            auto v1 = v2;
+            ++v1;
+            graph->setWidth((v2->first - v1->first));
+        }
+        graph->clearData();
+        for (auto& h : histogram) {
+            graph->addData(h.first, h.second*100);
+        }
+        rescaleAxes();
+        replot();
+    }
+}
+
+void QualityHistogram::showSamplingText()
+{
+    QStyleOption style;
+    samplingLabel = new QCPItemText(this);
+    samplingLabel->setText("Collecting samples");
+    samplingLabel->setColor(style.palette.color(QPalette::Text));
+    samplingLabel->setTextAlignment(Qt::AlignCenter);
+    samplingLabel->setPositionAlignment(Qt::AlignCenter);
+    samplingLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
+    samplingLabel->position->setCoords(0.5, 0.5);
+    addItem(samplingLabel);
+    sampling = true;
 }

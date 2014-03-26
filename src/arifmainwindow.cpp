@@ -42,6 +42,10 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
             qualityGraphDock, SLOT(setVisible(bool)));
     connect(clearGraphsButton, SIGNAL(clicked(bool)),
             qualityGraph, SLOT(clear()));
+    connect(displayCheck, SIGNAL(toggled(bool)),
+            qualityHistogramDock, SLOT(setVisible(bool)));
+    connect(clearGraphsButton, SIGNAL(clicked(bool)),
+            qualityHistogram, SLOT(clear()));
     restoreProgramSettings();
     updateFps();
     // Delay initialization until a later event loop cycle.
@@ -90,6 +94,8 @@ void ArifMainWindow::initialize()
             SLOT(frameProcessed(SharedData)));
     connect(foreman.data(), SIGNAL(frameProcessed(SharedData)),
             qualityGraph, SLOT(addFrameStats(SharedData)));
+    connect(foreman.data(), SIGNAL(frameProcessed(SharedData)),
+            qualityHistogram, SLOT(addFrameStats(SharedData)));
     connect(foreman.data(), SIGNAL(stopped()), SLOT(foremanStopped()));
     // Read a frame and render it. If this is a file, go back to beginning.
     foreman->renderNextFrame();
@@ -122,8 +128,9 @@ void ArifMainWindow::requestRendering()
         if (displayCheck->isChecked()) {
             foreman->renderNextFrame();
             qualityGraph->setShortGraphMaxFrames(shortGraphLength->value());
-            qualityGraph->rescaleAxes();
-            qualityGraph->replot();
+            qualityGraph->draw();
+            qualityHistogram->setShortGraphMaxFrames(shortGraphLength->value());
+            qualityHistogram->draw();
         }
     }
 }
