@@ -25,6 +25,8 @@
 #include <QDebug>
 #include <cassert>
 
+static uint fpsUpdateSec = 3;
+
 ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
                                QWidget* parent,
                                Qt::WindowFlags flags):
@@ -41,6 +43,7 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
     connect(clearGraphsButton, SIGNAL(clicked(bool)),
             qualityGraph, SLOT(clear()));
     restoreProgramSettings();
+    updateFps();
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));
 }
@@ -75,6 +78,8 @@ void ArifMainWindow::initialize()
             foreman.data(), SLOT(takeFrame(SharedRawFrame)));
     connect(reader, SIGNAL(frameReady(SharedRawFrame)),
             SLOT(requestRendering()));
+    connect(reader, SIGNAL(frameReady(SharedRawFrame)),
+            SLOT(frameReceived()));
     connect(reader, SIGNAL(error(QString)), SLOT(readerError(QString)));
     connect(reader, SIGNAL(atEnd()), SLOT(readerFinished()));
     connect(foreman.data(), SIGNAL(ready()),
@@ -104,6 +109,9 @@ void ArifMainWindow::initialize()
     }
 
     printActiveThreads();
+    auto fpsTimer = new QTimer(this);
+    connect(fpsTimer, SIGNAL(timeout()), SLOT(updateFps()));
+    fpsTimer->start(1000 * fpsUpdateSec);
 }
 
 void ArifMainWindow::requestRendering()
@@ -121,6 +129,7 @@ void ArifMainWindow::requestRendering()
 
 void ArifMainWindow::frameProcessed(SharedData data)
 {
+    processedFrames++;
     if (data->doRender) {
         // Just swap image data with the one currently rendered.
         videoWidget->unusedFrame()->swap(data->renderedFrame);
@@ -147,6 +156,27 @@ void ArifMainWindow::frameProcessed(SharedData data)
         decodedImagePixelSize = data->decoded.elemSize();
         updateSettings();
     }
+}
+
+void ArifMainWindow::frameReceived()
+{
+    receivedFrames++;
+}
+
+void ArifMainWindow::frameMissed()
+{
+    missedFrames++;
+}
+
+void ArifMainWindow::updateFps()
+{
+    double div = fpsUpdateSec;
+    receivedLabel->setText(QString::number((int)(receivedFrames / div)));
+    receivedFrames = 0;
+    processedLabel->setText(QString::number((int)(processedFrames / div)));
+    processedFrames = 0;
+    missedLabel->setText(QString::number((int)(missedFrames / div)));
+    missedFrames = 0;
 }
 
 void ArifMainWindow::on_processButton_toggled(bool checked)

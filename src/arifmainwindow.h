@@ -36,6 +36,9 @@ private slots:
     void initialize();
     void requestRendering();
     void frameProcessed(SharedData data);
+    void frameReceived();
+    void frameMissed();
+    void updateFps();
     void foremanStopped();
     void readerError(QString error);
     void readerFinished();
@@ -63,6 +66,9 @@ private:
     QList<float> entireFileQualities;
     QRect thresholdSamplingArea;
     int decodedImagePixelSize = 0;
+    uint receivedFrames = 0;
+    uint processedFrames = 0;
+    uint missedFrames = 0;
 };
 
 #endif

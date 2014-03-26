@@ -88,7 +88,7 @@ void Foreman::takeFrame(SharedRawFrame frame)
         futures << FutureData(this, QtConcurrent::run(processData, data));
         requestAnotherFrame();
     } else {
-        qDebug() << "dropped frame";
+        emit frameMissed();
     }
 }
 

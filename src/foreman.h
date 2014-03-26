@@ -102,6 +102,9 @@ signals:
     // copy whatever it needs.
     void frameProcessed(SharedData data);
 
+    // Emmited when there was no free threads to process a received frame.
+    void frameMissed();
+
 private:
     bool haveIdleThreads();
     bool requestAnotherFrame();
