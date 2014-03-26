@@ -58,12 +58,15 @@ public:
     static RawVideoSource* instance;
 
 private:
+    void frameDestroyed(QByteArray frameData);
+
     QSize size;
     QString file;
     QScopedPointer<RawVideoReader> reader_;
     enum PixelFormat pixfmt;
     uint headerBytes;
     int frameBytes;
+    QList<QByteArray> framePool;
 
     friend class RawSourceConfigWidget;
     friend class RawVideoFrame;
@@ -96,13 +99,14 @@ private:
 class RawVideoFrame: public RawFrame
 {
 public:
+    ~RawVideoFrame();
     SharedRawFrame copy();
     VideoSourcePlugin* plugin();
     void serialize(QDataStream& s);
     void load(QDataStream& s);
 
 private:
-    std::vector<uint8_t> frame;
+    QByteArray frame;
     friend class RawVideoDecoder;
     friend class RawVideoSource;
     friend class RawVideoReader;

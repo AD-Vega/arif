@@ -41,6 +41,11 @@ RawVideoSource::RawVideoSource(QObject* parent): QObject(parent)
     instance = this;
 }
 
+RawVideoFrame::~RawVideoFrame()
+{
+    RawVideoSource::instance->frameDestroyed(frame);
+}
+
 SharedRawFrame RawVideoFrame::copy()
 {
     SharedRawFrame f = RawVideoSource::instance->createRawFrame();
@@ -56,16 +61,14 @@ VideoSourcePlugin* RawVideoFrame::plugin()
 
 void RawVideoFrame::serialize(QDataStream& s)
 {
-    s.writeRawData(reinterpret_cast<const char*>(frame.data()),
-                   frame.size());
+    s.writeRawData(frame.constData(), frame.size());
     RawFrame::serialize(s);
 }
 
 void RawVideoFrame::load(QDataStream& s)
 {
     frame.resize(RawVideoSource::instance->frameBytes);
-    s.readRawData(reinterpret_cast<char*>(frame.data()),
-                  RawVideoSource::instance->frameBytes);
+    s.readRawData(frame.data(), RawVideoSource::instance->frameBytes);
     RawFrame::load(s);
 }
 
@@ -85,7 +88,7 @@ VideoSourcePlugin* RawVideoDecoder::plugin()
 const cv::Mat RawVideoDecoder::decode(RawFrame* in)
 {
     auto f = static_cast<RawVideoFrame*>(in);
-    auto c = reinterpret_cast<const char*>(f->frame.data());
+    auto c = f->frame.constData();
     thedecoder->decode(QByteArray::fromRawData(c, f->frame.size()));
     return thedecoder->getCvImage();
 }
@@ -160,10 +163,9 @@ void RawVideoReader::readFrame()
     if (!isSequential()) {
         SharedRawFrame frm = s->createRawFrame();
         RawVideoFrame* f = static_cast<RawVideoFrame*>(frm.data());
-        f->frame.resize(s->frameBytes);
         if (file.isOpen()) {
             qint64 status;
-            status = file.read(reinterpret_cast<char*>(f->frame.data()), s->frameBytes);
+            status = file.read(f->frame.data(), s->frameBytes);
             if (status < 0) {
                 emit error("Error reading file.");
             } else if (status < s->frameBytes) {
@@ -223,7 +225,6 @@ void RawVideoReader::setupAsio(int fd)
     RawVideoSource* s = RawVideoSource::instance;
     currentlyReadFrame = s->createRawFrame();
     RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
-    f->frame.resize(s->frameBytes);
     auto frame = currentlyReadFrame;
     asyncHandler = [this, frame]
                    (const boost::system::error_code & err,
@@ -438,9 +439,20 @@ SharedDecoder RawVideoSource::createDecoder()
     return SharedDecoder(new RawVideoDecoder);
 }
 
+void RawVideoSource::frameDestroyed(QByteArray frameData)
+{
+    framePool << frameData;
+}
+
 SharedRawFrame RawVideoSource::createRawFrame()
 {
-    return SharedRawFrame(new RawVideoFrame);
+    auto frame = new RawVideoFrame;
+    if (!framePool.isEmpty()) {
+        frame->frame = framePool.takeLast();
+    } else {
+        frame->frame.resize(RawVideoSource::instance->frameBytes);
+    }
+    return SharedRawFrame(frame);
 }
 
 Reader* RawVideoSource::reader()
