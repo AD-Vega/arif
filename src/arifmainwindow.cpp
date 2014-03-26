@@ -69,6 +69,7 @@ void ArifMainWindow::initialize()
     connect(histogramLogarithmicCheck, SIGNAL(toggled(bool)), SLOT(getFrameToRender()));
     connect(markClippedCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
     connect(markClippedCheck, SIGNAL(toggled(bool)), SLOT(getFrameToRender()));
+    connect(negativeCheck, SIGNAL(toggled(bool)), SLOT(updateSettings()));
 
     // Prepare the processing pipeline and start displaying frames.
     foreman.reset(new Foreman);
@@ -280,6 +281,7 @@ void ArifMainWindow::readerFinished()
 
 void ArifMainWindow::updateSettings()
 {
+    settings.negative = negativeCheck->isChecked();
     settings.doCrop = cropCheck->isChecked();
     settings.cropWidth = cropWidthBox->value();
     settings.threshold = thresholdSpinbox->value();
@@ -372,6 +374,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("mainwindow/geometry", saveGeometry());
     config.setValue("mainwindow/state", saveState());
     config.setValue("mainwindow/displayinterval", displayInterval->value());
+    config.setValue("processing/negative", negativeCheck->isChecked());
     config.setValue("processing/cropwidth", cropWidthBox->value());
     config.setValue("processing/saveimages", imageDestinationDirectory->text());
     config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
@@ -394,6 +397,7 @@ void ArifMainWindow::restoreProgramSettings()
     restoreGeometry(config.value("mainwindow/geometry").toByteArray());
     restoreState(config.value("mainwindow/state").toByteArray());
     displayInterval->setValue(config.value("mainwindow/displayinterval", 10).toInt());
+    negativeCheck->setChecked(config.value("processing/negative", false).toBool());
     cropWidthBox->setValue(config.value("processing/cropwidth", 100).toInt());
     imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
     noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());

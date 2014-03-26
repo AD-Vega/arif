@@ -21,6 +21,7 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <QFont>
 #include <QFontMetrics>
+#include <cstdint>
 
 void DecodeStage(SharedData d);
 void CropStage(SharedData d);
@@ -56,6 +57,29 @@ void DecodeStage(SharedData d)
 {
     d->completedStages << "Decode";
     d->decoded = d->decoder->decode(d->rawFrame.data());
+    if (d->settings->negative) {
+        double maxval;
+        switch (d->decoded.depth()) {
+            case CV_8U:
+                cv::subtract(UINT8_MAX, d->decoded, d->decoded);
+                break;
+            case CV_8S:
+                cv::subtract(INT8_MAX, d->decoded, d->decoded);
+                break;
+            case CV_16U:
+                cv::subtract(UINT16_MAX, d->decoded, d->decoded);
+                break;
+            case CV_16S:
+                cv::subtract(INT16_MAX, d->decoded, d->decoded);
+                break;
+            case CV_32S:
+                cv::subtract(INT32_MAX, d->decoded, d->decoded);
+                break;
+            default:
+                cv::minMaxIdx(d->decoded.reshape(1), nullptr, &maxval);
+                cv::subtract(maxval, d->decoded, d->decoded);
+        }
+    }
     if (d->decoded.type() != CV_32F)
         d->decoded.convertTo(d->decodedFloat, CV_32F);
     else

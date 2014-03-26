@@ -48,6 +48,8 @@ enum class QualityFilterType
 struct ProcessingSettings {
     // This will never be changed once the source is chosen
     VideoSourcePlugin* plugin;
+    // Decode
+    bool negative;
     // Crop
     bool doCrop;
     uint cropWidth;
