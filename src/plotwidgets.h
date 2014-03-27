@@ -22,6 +22,7 @@
 #include "qcustomplot.h"
 #include "processing.h"
 #include <boost/accumulators/statistics/density.hpp>
+#include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/accumulators/accumulators.hpp>
 
 class QualityGraph: public QCustomPlot
@@ -42,6 +43,9 @@ private:
     QCPGraph* shortGraph;
     int shortLength = 100;
     unsigned long long counter = 0; // provides x values
+    boost::accumulators::accumulator_set < double,
+          boost::accumulators::features<boost::accumulators::tag::rolling_mean >>
+          longGraphMean;
 };
 
 class QualityHistogram: public QCustomPlot

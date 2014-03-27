@@ -25,7 +25,9 @@ static const Qt::GlobalColor color2 = Qt::red;
 
 static const int N = 30, n = 100;
 
-QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
+QualityGraph::QualityGraph(QWidget* parent):
+    QCustomPlot(parent),
+    longGraphMean(boost::accumulators::tag::rolling_window::window_size = n)
 {
     QStyleOption style;
     longGraph = addGraph(xAxis, yAxis);
@@ -70,7 +72,9 @@ void QualityGraph::addFrameStats(SharedData data)
     if (data->stageSuccessful
             && data->completedStages.contains("EstimateQuality")) {
         ++counter;
-        longGraph->addData(counter, data->quality);
+        longGraphMean(data->quality);
+        longGraph->addData(counter,
+                           boost::accumulators::rolling_mean(longGraphMean));
         shortGraph->addData(counter, data->quality);
         if (shortGraph->data()->size() > shortLength) {
             shortGraph->removeDataBefore(counter - shortLength);
