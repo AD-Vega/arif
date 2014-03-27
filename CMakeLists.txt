@@ -46,7 +46,6 @@ set_prefixed(arif_SRC src/
   foreman.cpp
   processing.cpp
   sourceselectionwindow.cpp
-  glhistogramwidget.cpp
   qcustomplot.cpp
   plotwidgets.cpp
 )
@@ -56,7 +55,6 @@ set_prefixed(arif_MOC src/
   arifmainwindow.h
   foreman.h
   sourceselectionwindow.h
-  glhistogramwidget.h
   qcustomplot.h
   plotwidgets.h
 )

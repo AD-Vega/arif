@@ -143,10 +143,8 @@ void ArifMainWindow::frameProcessed(SharedData data)
         videoWidget->unusedFrame()->swap(data->renderedFrame);
         videoWidget->swapFrames();
         videoWidget->setDrawnPath(data->paintObjects);
-        auto tmp = histogramWidget->unusedHistograms();
-        histogramWidget->unusedHistograms() = data->histograms;
-        data->histograms = tmp;
-        histogramWidget->swapHistograms(1 == data->decoded.channels());
+        bool gray = 1 == data->decoded.channels();
+        histogramWidget->updateHistograms(data->histograms, gray);
     }
     if (acceptanceEntireFileCheck->isChecked())
         entireFileQualities << data->quality;

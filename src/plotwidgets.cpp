@@ -189,3 +189,67 @@ void QualityHistogram::showSamplingText()
     addItem(samplingLabel);
     sampling = true;
 }
+
+ImageHistogram::ImageHistogram(QWidget* parent): QCustomPlot(parent)
+{
+    QStyleOption style;
+    red = new QCPBars(xAxis, yAxis);
+    green = new QCPBars(xAxis, yAxis);
+    blue = new QCPBars(xAxis, yAxis);
+    addPlottable(red);
+    addPlottable(green);
+    addPlottable(blue);
+    green->moveAbove(blue);
+    red->moveAbove(green);
+
+    xAxis->setTicks(false);
+    xAxis->setTickLabels(false);
+    xAxis->setBasePen(style.palette.color(QPalette::Text));
+
+    yAxis->setTicks(false);
+    yAxis->setTickLabels(false);
+    yAxis->setBasePen(style.palette.color(QPalette::Text));
+
+    red->setPen(QPen(QColor(255, 0, 0, 128)));
+    red->setBrush(QColor(255, 0, 0, 128));
+    green->setPen(QPen(QColor(0, 255, 0, 128)));
+    green->setBrush(QColor(0, 255, 0, 128));
+    blue->setPen(QPen(QColor(0, 0, 255, 128)));
+    blue->setBrush(QColor(0, 0, 255, 128));
+
+    red->setWidth(1);
+    green->setWidth(1);
+    blue->setWidth(1);
+
+    setBackground(style.palette.background());
+}
+
+void ImageHistogram::updateHistograms(QSharedPointer< Histograms > histograms, bool grayscale)
+{
+    red->clearData();
+    green->clearData();
+    blue->clearData();
+    if (gray != grayscale) {
+        gray = grayscale;
+        if (gray) {
+            QStyleOption style;
+            red->setPen(QPen(style.palette.color(QPalette::Text)));
+            red->setBrush(style.palette.color(QPalette::Text));
+        } else {
+            red->setPen(QPen(QColor(255, 0, 0, 128)));
+            red->setBrush(QColor(255, 0, 0, 128));
+        }
+    }
+    if (grayscale) {
+        for (int i = 0; i < 255; i++)
+            red->addData(i, histograms->red[i]);
+    } else {
+        for (int i = 0; i < 255; i++) {
+            red->addData(i, histograms->red[i]);
+            green->addData(i, histograms->green[i]);
+            blue->addData(i, histograms->blue[i]);
+        }
+    }
+    rescaleAxes();
+    replot();
+}

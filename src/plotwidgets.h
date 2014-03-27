@@ -74,4 +74,19 @@ private:
     unsigned long long counter = 0;
 };
 
+class ImageHistogram: public QCustomPlot
+{
+    Q_OBJECT
+
+public:
+    explicit ImageHistogram(QWidget* parent = 0);
+    void updateHistograms(QSharedPointer<Histograms> histograms,
+                          bool grayscale);
+
+private:
+    QCPBars* red, *green, *blue;
+    bool gray = false;
+};
+
+
 #endif

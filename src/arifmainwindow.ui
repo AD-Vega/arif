@@ -609,7 +609,7 @@
    <attribute name="dockWidgetArea">
     <number>8</number>
    </attribute>
-   <widget class="GLHistogramWidget" name="histogramWidget"/>
+   <widget class="ImageHistogram" name="histogramWidget"/>
   </widget>
   <widget class="QDockWidget" name="qualityGraphDock">
    <property name="features">
@@ -641,12 +641,6 @@
    <container>1</container>
   </customwidget>
   <customwidget>
-   <class>GLHistogramWidget</class>
-   <extends>QWidget</extends>
-   <header>glhistogramwidget.h</header>
-   <container>1</container>
-  </customwidget>
-  <customwidget>
    <class>QualityGraph</class>
    <extends>QWidget</extends>
    <header>plotwidgets.h</header>
@@ -654,6 +648,12 @@
   </customwidget>
   <customwidget>
    <class>QualityHistogram</class>
+   <extends>QWidget</extends>
+   <header>plotwidgets.h</header>
+   <container>1</container>
+  </customwidget>
+  <customwidget>
+   <class>ImageHistogram</class>
    <extends>QWidget</extends>
    <header>plotwidgets.h</header>
    <container>1</container>
