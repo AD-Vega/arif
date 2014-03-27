@@ -22,7 +22,6 @@
 #define QT_STATICPLUGIN
 
 #include "videosources/interfaces.h"
-#include <vector>
 #include <qarvdecoder.h>
 #include <QLineEdit>
 #include <QSpinBox>

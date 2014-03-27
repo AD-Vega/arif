@@ -28,10 +28,12 @@ include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
 set_prefixed(arif_videosources_SRC videosources/
   interfaces.cpp
   rawvideo.cpp
+  images.cpp
 )
 set_prefixed(arif_videosources_MOC videosources/
   interfaces.h
   rawvideo.h
+  images.h
 )
 set_prefixed(arif_UI_pre src/
   arifmainwindow.ui
