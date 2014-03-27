@@ -30,9 +30,9 @@ class QualityGraph: public QCustomPlot
 
 public:
     explicit QualityGraph(QWidget* parent = 0);
-    void setShortGraphMaxFrames(uint frames);
 
 public slots:
+    void setShortGraphMaxFrames(int frames);
     void addFrameStats(SharedData data);
     void clear();
     void draw();
@@ -40,7 +40,7 @@ public slots:
 private:
     QCPGraph* longGraph;
     QCPGraph* shortGraph;
-    uint shortLength = 100;
+    int shortLength = 100;
     unsigned long long counter = 0; // provides x values
 };
 
@@ -50,7 +50,6 @@ class QualityHistogram: public QCustomPlot
 
 public:
     explicit QualityHistogram(QWidget* parent = 0);
-    void setShortGraphMaxFrames(uint frames);
 
 public slots:
     void addFrameStats(SharedData data);

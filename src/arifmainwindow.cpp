@@ -46,6 +46,8 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
             qualityHistogramDock, SLOT(setVisible(bool)));
     connect(clearGraphsButton, SIGNAL(clicked(bool)),
             qualityHistogram, SLOT(clear()));
+    connect(shortGraphLength, SIGNAL(valueChanged(int)),
+            qualityGraph, SLOT(setShortGraphMaxFrames(int)));
     restoreProgramSettings();
     updateFps();
     // Delay initialization until a later event loop cycle.
@@ -127,9 +129,7 @@ void ArifMainWindow::requestRendering()
         finishedFrameCounter = 0;
         if (displayCheck->isChecked()) {
             foreman->renderNextFrame();
-            qualityGraph->setShortGraphMaxFrames(shortGraphLength->value());
             qualityGraph->draw();
-            qualityHistogram->setShortGraphMaxFrames(shortGraphLength->value());
             qualityHistogram->draw();
         }
     }

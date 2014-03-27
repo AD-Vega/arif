@@ -37,7 +37,7 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     xAxis->setTickPen(QPen(color1));
     xAxis->setBasePen(QPen(color1));
 
-    xAxis2->setLabel("Last several frames");
+    xAxis2->setLabel(QString("Last %1 frames").arg(shortLength));
     xAxis2->setVisible(true);
     xAxis2->setTickPen(QPen(color2));
     xAxis2->setLabelColor(color2);
@@ -59,9 +59,10 @@ QualityGraph::QualityGraph(QWidget* parent): QCustomPlot(parent)
     setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
 }
 
-void QualityGraph::setShortGraphMaxFrames(uint frames)
+void QualityGraph::setShortGraphMaxFrames(int frames)
 {
     shortLength = frames;
+    xAxis2->setLabel(QString("Last %1 frames").arg(shortLength));
 }
 
 void QualityGraph::addFrameStats(SharedData data)
@@ -100,10 +101,10 @@ QualityHistogram::QualityHistogram(QWidget* parent):
     addPlottable(graph);
 
     xAxis->setLabel("Quality of frames");
-    xAxis->setLabelColor(color1);
-    xAxis->setTickLabelColor(color1);
-    xAxis->setTickPen(QPen(color1));
-    xAxis->setBasePen(QPen(color1));
+    xAxis->setLabelColor(style.palette.color(QPalette::Text));
+    xAxis->setTickLabelColor(style.palette.color(QPalette::Text));
+    xAxis->setTickPen(QPen(style.palette.color(QPalette::Text)));
+    xAxis->setBasePen(QPen(style.palette.color(QPalette::Text)));
 
     yAxis->setLabel("Percentage of frames");
     yAxis->setLabelColor(style.palette.color(QPalette::Text));
@@ -111,9 +112,9 @@ QualityHistogram::QualityHistogram(QWidget* parent):
     yAxis->setTickPen(style.palette.color(QPalette::Text));
     yAxis->setBasePen(style.palette.color(QPalette::Text));
 
-    QColor tmp = color1;
+    QColor tmp = style.palette.color(QPalette::Text);
     tmp.setAlpha(64);
-    graph->setPen(QPen(color1));
+    graph->setPen(QPen(style.palette.color(QPalette::Text)));
     graph->setBrush(tmp);
     setBackground(style.palette.background());
 
@@ -121,11 +122,6 @@ QualityHistogram::QualityHistogram(QWidget* parent):
 
     setNotAntialiasedElements(QCP::aeAll);
     setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
-}
-
-void QualityHistogram::setShortGraphMaxFrames(uint frames)
-{
-    shortLength = frames;
 }
 
 void QualityHistogram::addFrameStats(SharedData data)
@@ -170,8 +166,16 @@ void QualityHistogram::draw()
 
 void QualityHistogram::showSamplingText()
 {
+    static QFont font;
+    static bool sizeSet = false;
+    if (!sizeSet) {
+        sizeSet = true;
+        font.setPixelSize(20);
+        font.setBold(true);
+    }
     QStyleOption style;
     samplingLabel = new QCPItemText(this);
+    samplingLabel->setFont(font);
     samplingLabel->setText("Collecting samples");
     samplingLabel->setColor(style.palette.color(QPalette::Text));
     samplingLabel->setTextAlignment(Qt::AlignCenter);
