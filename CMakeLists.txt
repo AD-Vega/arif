@@ -29,11 +29,13 @@ set_prefixed(arif_videosources_SRC videosources/
   interfaces.cpp
   rawvideo.cpp
   images.cpp
+  aravis.cpp
 )
 set_prefixed(arif_videosources_MOC videosources/
   interfaces.h
   rawvideo.h
   images.h
+  aravis.h
 )
 set_prefixed(arif_UI_pre src/
   arifmainwindow.ui
