@@ -34,6 +34,21 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
 {
     settings.plugin = plugin;
     setupUi(this);
+    // Delay initialization until a later event loop cycle.
+    QTimer::singleShot(0, this, SLOT(initialize()));
+    QSettings config;
+    restoreGeometry(config.value("mainwindow/geometry").toByteArray());
+}
+
+void ArifMainWindow::initialize()
+{
+    QSettings config;
+    // Make sure the window is properly shown before restoring docks etc.
+    QApplication::processEvents(QEventLoop::ExcludeUserInputEvents |
+                                QEventLoop::ExcludeSocketNotifiers);
+    restoreState(config.value("mainwindow/state").toByteArray());
+
+    // Connect widgets whose connections need to be triggered when settings are read.
     connect(displayCheck, SIGNAL(toggled(bool)),
             videoDock, SLOT(setVisible(bool)));
     connect(displayCheck, SIGNAL(toggled(bool)),
@@ -48,14 +63,11 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
             qualityHistogram, SLOT(clear()));
     connect(shortGraphLength, SIGNAL(valueChanged(int)),
             qualityGraph, SLOT(setShortGraphMaxFrames(int)));
+
+    // Restore settings and clear the FPS display, which is garbage at startup.
     restoreProgramSettings();
     updateFps();
-    // Delay initialization until a later event loop cycle.
-    QTimer::singleShot(0, this, SLOT(initialize()));
-}
 
-void ArifMainWindow::initialize()
-{
     // Connect widgets that can update settings.
     connect(noiseSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
     connect(signalSigmaSpinbox, SIGNAL(valueChanged(double)), SLOT(updateSettings()));
@@ -399,8 +411,6 @@ void ArifMainWindow::saveProgramSettings()
 void ArifMainWindow::restoreProgramSettings()
 {
     QSettings config;
-    restoreGeometry(config.value("mainwindow/geometry").toByteArray());
-    restoreState(config.value("mainwindow/state").toByteArray());
     displayInterval->setValue(config.value("mainwindow/displayinterval", 10).toInt());
     negativeCheck->setChecked(config.value("processing/negative", false).toBool());
     cropWidthBox->setValue(config.value("processing/cropwidth", 100).toInt());
