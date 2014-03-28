@@ -27,13 +27,17 @@
 
 static uint fpsUpdateSec = 3;
 
-ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin,
-                               QWidget* parent,
-                               Qt::WindowFlags flags):
-    QMainWindow(parent, flags)
+ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin, QWidget* videoControls, QWidget* parent, Qt::WindowFlags flags):
+    QMainWindow(parent, flags), sourceControl(videoControls)
 {
     settings.plugin = plugin;
     setupUi(this);
+    sourceControlDock = new QDockWidget("Arif video control", this);
+    sourceControlDock->setObjectName("arifVideoControl");
+    sourceControlDock->setFeatures(sourceControlDock->features() & ~QDockWidget::DockWidgetClosable);
+    if (sourceControl) {
+        sourceControlDock->setWidget(sourceControl);
+    }
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));
     QSettings config;
@@ -47,6 +51,7 @@ void ArifMainWindow::initialize()
     QApplication::processEvents(QEventLoop::ExcludeUserInputEvents |
                                 QEventLoop::ExcludeSocketNotifiers);
     restoreState(config.value("mainwindow/state").toByteArray());
+    sourceControlDock->setVisible((bool)sourceControl);
 
     // Connect widgets whose connections need to be triggered when settings are read.
     connect(displayCheck, SIGNAL(toggled(bool)),

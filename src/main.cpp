@@ -28,13 +28,15 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationName("AD Vega");
     QCoreApplication::setApplicationName("arif");
     VideoSourcePlugin* plugin;
+    QWidget* control;
     {
         SourceSelectionWindow s;
         s.exec();
         plugin = s.result() == QDialog::Accepted ? s.selectedSource : nullptr;
+        control = s.sourceControl;
     }
     if (plugin) {
-        ArifMainWindow w(plugin);
+        ArifMainWindow w(plugin, control);
         w.show();
         return a.exec();
     }

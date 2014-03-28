@@ -30,10 +30,12 @@ class SourceSelectionWindow: public QDialog
 public:
     explicit SourceSelectionWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
     VideoSourcePlugin* selectedSource = nullptr;
+    QWidget* sourceControl = nullptr;
 
 private slots:
     void changeSource();
     void saveLastPluginName();
+    void acceptConfiguration(QWidget* control);
 
 private:
     QComboBox* selector;

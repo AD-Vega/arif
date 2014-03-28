@@ -29,6 +29,7 @@ class ArifMainWindow : public QMainWindow, private Ui::arifMainWindow
 
 public:
     explicit ArifMainWindow(VideoSourcePlugin* plugin,
+                            QWidget* videoControls = 0,
                             QWidget* parent = 0,
                             Qt::WindowFlags flags = 0);
 
@@ -69,6 +70,8 @@ private:
     uint receivedFrames = 0;
     uint processedFrames = 0;
     uint missedFrames = 0;
+    QWidget* sourceControl;
+    QDockWidget* sourceControlDock;
 };
 
 #endif

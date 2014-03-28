@@ -156,15 +156,12 @@ void AravisSourceConfigWidget::finish()
     auto c = gui->camera();
     s->size = c->getFrameSize();
     s->pixfmt = c->getPixelFormatId();
-    gui->setParent(0);
-    gui->setWindowFlags(gui->windowFlags() & ~Qt::WindowCloseButtonHint);
-    gui->show();
-    gui->setAttribute(Qt::WA_QuitOnClose, false);
     disconnect(gui, SIGNAL(recordingToggled(bool)), this, SLOT(finish()));
     gui->forceRecording();
     s->reader_->camera = c;
     connect(c, SIGNAL(frameReady()), s->reader_.data(), SLOT(getFrame()));
-    emit configurationComplete();
+    gui->setParent(0);
+    emit configurationComplete(gui);
 }
 
 Q_EXPORT_PLUGIN2(Aravis, Aravis::AravisSource)

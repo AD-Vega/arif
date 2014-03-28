@@ -61,7 +61,8 @@ void SourceSelectionWindow::changeSource()
     selectedSource = p;
     if (p) {
         currentWidget = p->createConfigurationWidget();
-        connect(currentWidget, SIGNAL(configurationComplete()), SLOT(accept()));
+        connect(currentWidget, SIGNAL(configurationComplete(QWidget*)),
+                SLOT(acceptConfiguration(QWidget*)));
         layout()->addWidget(currentWidget);
     }
 }
@@ -74,4 +75,10 @@ void SourceSelectionWindow::saveLastPluginName()
     if (p) {
         config.setValue("settings/source", QVariant::fromValue(p->name()));
     }
+}
+
+void SourceSelectionWindow::acceptConfiguration(QWidget* control)
+{
+    sourceControl = control;
+    accept();
 }

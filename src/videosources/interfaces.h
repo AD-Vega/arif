@@ -105,7 +105,9 @@ public:
         QGroupBox(title, parent) {}
 
 signals:
-    void configurationComplete();
+    // If this signal provides a non-NULL widget, that widget
+    // controls the video source, e.g. brightness.
+    void configurationComplete(QWidget* controls = nullptr);
 };
 
 class VideoSourcePlugin
