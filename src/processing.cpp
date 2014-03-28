@@ -317,7 +317,7 @@ void SaveStage(SharedData d)
     d->errorMessage.clear();
 
     auto& meta = d->rawFrame->metaData;
-    QString fnTemplate("%1/frame-%2-%3-q%4.ppm");
+    QString fnTemplate("%1/frame-%2-%3-q%4");
     QString filename = fnTemplate
                        .arg(d->settings->saveImagesDirectory)
                        .arg(meta.timestamp.toString("yyyyMMdd-hhmmsszzz"))
@@ -335,11 +335,14 @@ void SaveStage(SharedData d)
                   (d->settings->filterType == QualityFilterType::MinimumQuality && d->accepted);
     doSave = doSave && d->settings->saveImages;
     if (doSave) {
-        std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
-        d->stageSuccessful = cv::imwrite(filename.toStdString(),
-                                         d->decoded(d->cvCropArea),
-                                         option);
+        d->stageSuccessful = saveImage(d->decoded(d->cvCropArea), filename);
         if (!d->stageSuccessful)
             d->errorMessage = "filename " + filename;
     }
+}
+
+bool saveImage(const cv::Mat& image, QString filename)
+{
+    std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
+    return cv::imwrite((filename + ".ppm").toStdString(), image, option);
 }

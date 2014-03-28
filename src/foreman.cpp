@@ -144,13 +144,12 @@ Foreman::FlushReturn
 Foreman::flush(QList< Foreman::QueuedImage > queue, int acceptance)
 {
     QList<QSharedPointer<cv::Mat>> localPool;
-    std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
     bool success = true;
     qSort(queue);
     int min = queue.count() * (100 - acceptance) / 100;
     for (int i = queue.count() - 1; i >= min; i--) {
         auto& qi = queue.at(i);
-        success = success && cv::imwrite(qi.filename.toStdString(), *qi.image, option);
+        success = success && saveImage(*qi.image, qi.filename);
         localPool << qi.image;
     }
     return qMakePair(success, localPool);

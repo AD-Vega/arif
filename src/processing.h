@@ -35,6 +35,9 @@ typedef QSharedPointer<ProcessingData> SharedData;
 // Call this using QtConcurrent::run().
 SharedData processData(SharedData data);
 
+// Exported because images can be saved by foreman, depending on filtering type.
+bool saveImage(const cv::Mat& image, QString filename);
+
 enum class QualityFilterType
 {
     None,
