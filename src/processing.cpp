@@ -343,6 +343,5 @@ void SaveStage(SharedData d)
 
 bool saveImage(const cv::Mat& image, QString filename)
 {
-    std::vector<int> option( { CV_IMWRITE_PXM_BINARY, 1 });
-    return cv::imwrite((filename + ".ppm").toStdString(), image, option);
+    return cv::imwrite((filename + ".tiff").toStdString(), image);
 }
