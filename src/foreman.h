@@ -28,15 +28,6 @@ class Foreman: public QObject
 {
     Q_OBJECT
 
-    // This struct combines a future with its watcher and automatically
-    // connects the parent Foreman to its finished() signal.
-    struct FutureData {
-        FutureData(Foreman* parent, QFuture<SharedData> future);
-        QFuture<SharedData> future;
-        QSharedPointer<QFutureWatcher<SharedData>> watcher;
-        bool operator==(const FutureData& other) const;
-    };
-
     // Used for acceptance rate quality filtering.
     struct QueuedImage {
         QSharedPointer<cv::Mat> image;
@@ -53,6 +44,8 @@ class Foreman: public QObject
     typedef QPair<bool, QList<SharedCvMat>> FlushReturn;
     // Watcher type for queueFlushFuture.
     typedef QFutureWatcher<FlushReturn> FlushWatcher;
+    // Watcher type for frame processing.
+    typedef QFutureWatcher<SharedData> ProcessWatcher;
 
 public:
     // Call updateSettings before use!
@@ -115,11 +108,12 @@ private:
     bool render = false;
     QSharedPointer<ProcessingSettings> settings;
     QList<SharedData> dataPool;
-    QList<FutureData> futures;
+    QList<ProcessWatcher*> futureWatcherPool;
     QList<QueuedImage> filterQueue;
     QList<SharedCvMat> imagePool; // For filterQueue.
     QFuture<FlushReturn> queueFlushFuture; // Flushing the queue is done in a thread.
     FlushWatcher* flushWatcher;
+    uint runningJobs = 0; // Count resources taken out of their pools.
 };
 
 #endif

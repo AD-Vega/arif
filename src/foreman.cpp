@@ -20,18 +20,6 @@
 #include <QtConcurrentRun>
 #include <opencv2/highgui/highgui.hpp>
 
-Foreman::FutureData::FutureData(Foreman* parent, QFuture<SharedData> future_):
-    future(future_), watcher(new QFutureWatcher<SharedData>)
-{
-    connect(watcher.data(), SIGNAL(finished()), parent, SLOT(processingComplete()));
-    watcher->setFuture(future);
-}
-
-bool Foreman::FutureData::operator==(const Foreman::FutureData& other) const
-{
-    return future == other.future && watcher == other.watcher;
-}
-
 Foreman::Foreman(QObject* parent):
     QObject(parent), flushWatcher(new FlushWatcher(this))
 {
@@ -51,7 +39,7 @@ void Foreman::start()
 void Foreman::stop()
 {
     started = false;
-    if (futures.empty()) {
+    if (runningJobs == 0) {
         flushFilteringQueue();
         emit stopped();
     }
@@ -85,7 +73,15 @@ void Foreman::takeFrame(SharedRawFrame frame)
         data->doRender = render;
         data->onlyRender = render && !started;
         render = false;
-        futures << FutureData(this, QtConcurrent::run(processData, data));
+        ProcessWatcher* watcher;
+        if (!futureWatcherPool.isEmpty()) {
+            watcher = futureWatcherPool.takeLast();
+        } else {
+            watcher = new ProcessWatcher(this);
+            connect(watcher, SIGNAL(finished()), SLOT(processingComplete()));
+        }
+        watcher->setFuture(QtConcurrent::run(processData, data));
+        runningJobs++;
         requestAnotherFrame();
     } else {
         emit frameMissed();
@@ -94,48 +90,47 @@ void Foreman::takeFrame(SharedRawFrame frame)
 
 void Foreman::processingComplete()
 {
-    foreach (const FutureData& f, futures) {
-        if (f.watcher->isFinished()) {
-            SharedData d = f.watcher->result();
-            futures.removeOne(f);
-            if (!d->stageSuccessful) {
-                auto previousStage = d->completedStages.last();
-                QString msg("Processing stage %1 failed: %2");
-                qDebug() << msg.arg(previousStage, d->errorMessage);
-                if (previousStage == "Save") {
-                    qDebug() << "Error writing image, saving disabled.";
-                    auto s = new ProcessingSettings;
-                    *s = *settings;
-                    s->saveImages = false;
-                    settings = QSharedPointer<ProcessingSettings>(s);
-                }
-                requestAnotherFrame();
-            } else {
-                if (d->settings->saveImages &&
-                        d->settings->filterType == QualityFilterType::AcceptanceRate) {
-                    SharedCvMat tmp;
-                    if (!imagePool.empty())
-                        tmp = imagePool.takeLast();
-                    else
-                        tmp = QSharedPointer<cv::Mat>(new cv::Mat);
-                    tmp.swap(d->cloned);
-                    QueuedImage qi;
-                    qi.image = tmp;
-                    qi.filename = d->filename;
-                    qi.quality = d->quality;
-                    filterQueue << qi;
-                }
-            }
-            emit frameProcessed(d);
-            dataPool << d;
-            requestAnotherFrame();
+    auto watcher = static_cast<ProcessWatcher*>(sender());
+    SharedData d = watcher->result();
+    if (!d->stageSuccessful) {
+        auto previousStage = d->completedStages.last();
+        QString msg("Processing stage %1 failed: %2");
+        qDebug() << msg.arg(previousStage, d->errorMessage);
+        if (previousStage == "Save") {
+            qDebug() << "Error writing image, saving disabled.";
+            auto s = new ProcessingSettings;
+            *s = *settings;
+            s->saveImages = false;
+            settings = QSharedPointer<ProcessingSettings>(s);
+        }
+    } else {
+        if (d->settings->saveImages &&
+                d->settings->filterType == QualityFilterType::AcceptanceRate) {
+            SharedCvMat tmp;
+            if (!imagePool.empty())
+                tmp = imagePool.takeLast();
+            else
+                tmp = QSharedPointer<cv::Mat>(new cv::Mat);
+            tmp.swap(d->cloned);
+            QueuedImage qi;
+            qi.image = tmp;
+            qi.filename = d->filename;
+            qi.quality = d->quality;
+            filterQueue << qi;
         }
     }
+    emit frameProcessed(d);
+    futureWatcherPool << watcher;
+    dataPool << d;
+    runningJobs--;
+
     if (filterQueue.count() >= settings->filterQueueLength)
         flushFilteringQueue();
-    if (!started && futures.empty()) {
+    if (!started && runningJobs == 0) {
         flushFilteringQueue();
         emit stopped();
+    } else {
+        requestAnotherFrame();
     }
 }
 
@@ -183,8 +178,17 @@ void Foreman::flushComplete()
 
 bool Foreman::haveIdleThreads()
 {
+    /*
+     * The runningJobs counter and the actual number of active threads are
+     * out of sync because threads can complete while we are busy with other stuff.
+     * The runningJobs counter is important because it measures the resources
+     * that have not yet been returned into their pools.
+     * Therefore, we check both that there are actual free threads and that
+     * there is not too much overcommit of resources.
+     */
     auto p = QThreadPool::globalInstance();
-    return p->activeThreadCount() < p->maxThreadCount();
+    return p->activeThreadCount() < p->maxThreadCount() &&
+           runningJobs < 2 * p->maxThreadCount();
 }
 
 bool Foreman::requestAnotherFrame()
