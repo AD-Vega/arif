@@ -154,7 +154,6 @@ void ArifMainWindow::requestRendering()
 
 void ArifMainWindow::frameProcessed(SharedData data)
 {
-    processedFrames++;
     if (data->doRender && data->completedStages.contains(ProcessingStage::Render)) {
         // Just swap image data with the one currently rendered.
         videoWidget->unusedFrame()->swap(data->renderedFrame);
@@ -164,9 +163,14 @@ void ArifMainWindow::frameProcessed(SharedData data)
         histogramWidget->updateHistograms(data->histograms, gray);
     }
     if (data->stageSuccessful) {
-        if (acceptanceEntireFileCheck->isChecked()
-                && data->completedStages.contains(ProcessingStage::EstimateQuality))
-            entireFileQualities << data->quality;
+        processedFrames++;
+        if (data->completedStages.contains(ProcessingStage::EstimateQuality)) {
+            if (settings.filterType == QualityFilterType::MinimumQuality
+                    && !data->accepted)
+                rejectedFrames++;
+            if (acceptanceEntireFileCheck->isChecked())
+                entireFileQualities << data->quality;
+        }
         if (data->completedStages.contains(ProcessingStage::Decode)) {
             if (!thresholdSamplingArea.isEmpty()) {
                 QRect t = thresholdSamplingArea;
@@ -183,6 +187,8 @@ void ArifMainWindow::frameProcessed(SharedData data)
                 updateSettings();
             }
         }
+    } else {
+        missedFrames++;
     }
 }
 
@@ -205,6 +211,8 @@ void ArifMainWindow::updateFps()
     processedFrames = 0;
     missedLabel->setText(QString::number((int)(missedFrames / div)));
     missedFrames = 0;
+    rejectedLabel->setText(QString::number((int)(rejectedFrames / div)));
+    rejectedFrames = 0;
 }
 
 void ArifMainWindow::on_processButton_toggled(bool checked)

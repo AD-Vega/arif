@@ -70,6 +70,7 @@ private:
     uint receivedFrames = 0;
     uint processedFrames = 0;
     uint missedFrames = 0;
+    uint rejectedFrames = 0;
     QWidget* sourceControl;
     QDockWidget* sourceControlDock;
 };
