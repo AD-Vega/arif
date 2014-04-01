@@ -25,21 +25,41 @@ static const Qt::GlobalColor color2 = Qt::red;
 
 static const int N = 30, n = 100;
 
+static QCPItemText* createSamplingLabel(QCustomPlot* parent)
+{
+    static QFont font = []() {
+        QFont font;
+        font.setPixelSize(20);
+        font.setBold(true);
+        return font;
+    }();
+    QStyleOption style;
+    auto samplingLabel = new QCPItemText(parent);
+    samplingLabel->setFont(font);
+    samplingLabel->setText("Not enough frames yet");
+    samplingLabel->setColor(style.palette.color(QPalette::Text));
+    samplingLabel->setTextAlignment(Qt::AlignCenter);
+    samplingLabel->setPositionAlignment(Qt::AlignCenter);
+    samplingLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
+    samplingLabel->position->setCoords(0.5, 0.5);
+    return samplingLabel;
+}
+
 QualityGraph::QualityGraph(QWidget* parent):
     QCustomPlot(parent),
     longGraphMean(boost::accumulators::tag::rolling_window::window_size = n)
 {
     QStyleOption style;
-    longGraph = addGraph(xAxis, yAxis);
     shortGraph = addGraph(xAxis2, yAxis);
+    longGraph = addGraph(xAxis, yAxis);
 
-    xAxis->setLabel("All frames");
+    xAxis->setLabel("Frame number (all frames)");
     xAxis->setLabelColor(color1);
     xAxis->setTickLabelColor(color1);
     xAxis->setTickPen(QPen(color1));
     xAxis->setBasePen(QPen(color1));
 
-    xAxis2->setLabel(QString("Last %1 frames").arg(shortLength));
+    xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
     xAxis2->setVisible(true);
     xAxis2->setTickPen(QPen(color2));
     xAxis2->setLabelColor(color2);
@@ -57,6 +77,8 @@ QualityGraph::QualityGraph(QWidget* parent):
     shortGraph->setPen(QPen(color2));
     setBackground(style.palette.background());
 
+    showSamplingText();
+
     setNotAntialiasedElements(QCP::aeAll);
     setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
 }
@@ -64,7 +86,7 @@ QualityGraph::QualityGraph(QWidget* parent):
 void QualityGraph::setShortGraphMaxFrames(int frames)
 {
     shortLength = frames;
-    xAxis2->setLabel(QString("Last %1 frames").arg(shortLength));
+    xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
 }
 
 void QualityGraph::addFrameStats(SharedData data)
@@ -86,13 +108,24 @@ void QualityGraph::clear()
 {
     longGraph->clearData();
     shortGraph->clearData();
+    showSamplingText();
     replot();
 }
 
 void QualityGraph::draw()
 {
+    if (samplingLabel) {
+        removeItem(samplingLabel);
+        samplingLabel = nullptr;
+    }
     rescaleAxes();
     replot();
+}
+
+void QualityGraph::showSamplingText()
+{
+    samplingLabel = createSamplingLabel(this);
+    addItem(samplingLabel);
 }
 
 QualityHistogram::QualityHistogram(QWidget* parent):
@@ -141,6 +174,7 @@ void QualityHistogram::clear()
 {
     accumulator = decltype(accumulator)(boost::accumulators::tag::density::cache_size = n,
                                         boost::accumulators::tag::density::num_bins = N);
+    counter = 0;
     graph->clearData();
     showSamplingText();
     replot();
@@ -150,9 +184,9 @@ void QualityHistogram::draw()
 {
     if (counter > n) {
         auto histogram = boost::accumulators::density(accumulator);
-        if (sampling) {
+        if (samplingLabel) {
             removeItem(samplingLabel);
-            sampling = false;
+            samplingLabel = nullptr;
             // Set bar width.
             auto v2 = histogram.begin();
             auto v1 = v2;
@@ -170,24 +204,8 @@ void QualityHistogram::draw()
 
 void QualityHistogram::showSamplingText()
 {
-    static QFont font;
-    static bool sizeSet = false;
-    if (!sizeSet) {
-        sizeSet = true;
-        font.setPixelSize(20);
-        font.setBold(true);
-    }
-    QStyleOption style;
-    samplingLabel = new QCPItemText(this);
-    samplingLabel->setFont(font);
-    samplingLabel->setText("Collecting samples");
-    samplingLabel->setColor(style.palette.color(QPalette::Text));
-    samplingLabel->setTextAlignment(Qt::AlignCenter);
-    samplingLabel->setPositionAlignment(Qt::AlignCenter);
-    samplingLabel->position->setType(QCPItemPosition::ptAxisRectRatio);
-    samplingLabel->position->setCoords(0.5, 0.5);
+    samplingLabel = createSamplingLabel(this);
     addItem(samplingLabel);
-    sampling = true;
 }
 
 ImageHistogram::ImageHistogram(QWidget* parent): QCustomPlot(parent)

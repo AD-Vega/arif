@@ -39,8 +39,12 @@ public slots:
     void draw();
 
 private:
+    void showSamplingText();
+
+private:
     QCPGraph* longGraph;
     QCPGraph* shortGraph;
+    QCPItemText* samplingLabel;
     int shortLength = 100;
     unsigned long long counter = 0; // provides x values
     boost::accumulators::accumulator_set < double,
@@ -66,7 +70,6 @@ private:
 private:
     QCPBars* graph;
     QCPItemText* samplingLabel;
-    bool sampling;
     uint shortLength = 100;
     boost::accumulators::accumulator_set < double,
           boost::accumulators::features<boost::accumulators::tag::density>>
