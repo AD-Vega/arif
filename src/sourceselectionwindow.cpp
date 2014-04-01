@@ -64,6 +64,7 @@ void SourceSelectionWindow::changeSource()
         connect(currentWidget, SIGNAL(configurationComplete(QWidget*)),
                 SLOT(acceptConfiguration(QWidget*)));
         layout()->addWidget(currentWidget);
+        adjustSize();
     }
 }
 
