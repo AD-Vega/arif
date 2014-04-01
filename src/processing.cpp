@@ -23,22 +23,33 @@
 #include <QFontMetrics>
 #include <cstdint>
 
+QString getProcessingStageName(ProcessingStage stage)
+{
+    static const QString names[] = {
+        "Decode",
+        "Render",
+        "Crop",
+        "EstimateQuality",
+        "Save"
+    };
+    return names[(int)stage];
+}
+
 void DecodeStage(SharedData d);
 void CropStage(SharedData d);
 void EstimateQualityStage(SharedData d);
 void RenderStage(SharedData d);
 void SaveStage(SharedData d);
 
-static void (*stages[])(SharedData) = {
-    DecodeStage,
-    RenderStage,
-    CropStage,
-    EstimateQualityStage,
-    SaveStage,
-};
-
 SharedData processData(SharedData data)
 {
+    static void (*stages[])(SharedData) = {
+        DecodeStage,
+        RenderStage,
+        CropStage,
+        EstimateQualityStage,
+        SaveStage,
+    };
     if (data->onlyRender) {
         DecodeStage(data);
         if (data->stageSuccessful)
@@ -55,7 +66,7 @@ SharedData processData(SharedData data)
 
 void DecodeStage(SharedData d)
 {
-    d->completedStages << "Decode";
+    d->completedStages << ProcessingStage::Decode;
     d->decoded = d->decoder->decode(d->rawFrame.data());
     if (d->settings->negative) {
         double maxval;
@@ -94,7 +105,7 @@ void DecodeStage(SharedData d)
 
 void CropStage(SharedData d)
 {
-    d->completedStages << "Crop";
+    d->completedStages << ProcessingStage::Crop;
 
     const cv::Mat& m = d->grayscale;
     QRect imageRect(0, 0, m.cols, m.rows);
@@ -261,7 +272,7 @@ void RenderStage(SharedData d)
         d->errorMessage.clear();
         return;
     }
-    d->completedStages << "Render";
+    d->completedStages << ProcessingStage::Render;
     void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
     cv::Mat* M = &d->decoded;
     switch (M->type()) {
@@ -292,7 +303,7 @@ void RenderStage(SharedData d)
 
 void EstimateQualityStage(SharedData d)
 {
-    d->completedStages << "EstimateQuality";
+    d->completedStages << ProcessingStage::EstimateQuality;
     cv::GaussianBlur(d->decodedFloat, d->blurNoise,
                      cv::Size(0, 0), d->settings->noiseSigma);
     cv::GaussianBlur(d->blurNoise, d->blurSignal,
@@ -312,7 +323,7 @@ void EstimateQualityStage(SharedData d)
 
 void SaveStage(SharedData d)
 {
-    d->completedStages << "Save";
+    d->completedStages << ProcessingStage::Save;
     d->stageSuccessful = true;
     d->errorMessage.clear();
 

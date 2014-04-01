@@ -92,7 +92,7 @@ void QualityGraph::setShortGraphMaxFrames(int frames)
 void QualityGraph::addFrameStats(SharedData data)
 {
     if (data->stageSuccessful
-            && data->completedStages.contains("EstimateQuality")) {
+            && data->completedStages.contains(ProcessingStage::EstimateQuality)) {
         ++counter;
         longGraphMean(data->quality);
         longGraph->addData(counter,
@@ -164,7 +164,7 @@ QualityHistogram::QualityHistogram(QWidget* parent):
 void QualityHistogram::addFrameStats(SharedData data)
 {
     if (data->stageSuccessful
-            && data->completedStages.contains("EstimateQuality")) {
+            && data->completedStages.contains(ProcessingStage::EstimateQuality)) {
         ++counter;
         accumulator(data->quality);
     }

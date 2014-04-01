@@ -32,6 +32,17 @@
 class ProcessingData;
 typedef QSharedPointer<ProcessingData> SharedData;
 
+enum class ProcessingStage
+{
+    Decode,
+    Render,
+    Crop,
+    EstimateQuality,
+    Save
+};
+
+QString getProcessingStageName(ProcessingStage stage);
+
 // Call this using QtConcurrent::run().
 SharedData processData(SharedData data);
 
@@ -98,7 +109,7 @@ struct ProcessingData {
     bool stageSuccessful;
     QString errorMessage;
 
-    QStringList completedStages;
+    QList<ProcessingStage> completedStages;
     // Settings are reference-counted to allow Foreman
     // to change settings for new instances.
     QSharedPointer<ProcessingSettings> settings;

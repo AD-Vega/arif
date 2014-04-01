@@ -155,7 +155,7 @@ void ArifMainWindow::requestRendering()
 void ArifMainWindow::frameProcessed(SharedData data)
 {
     processedFrames++;
-    if (data->doRender) {
+    if (data->doRender && data->completedStages.contains(ProcessingStage::Render)) {
         // Just swap image data with the one currently rendered.
         videoWidget->unusedFrame()->swap(data->renderedFrame);
         videoWidget->swapFrames();
@@ -163,21 +163,26 @@ void ArifMainWindow::frameProcessed(SharedData data)
         bool gray = 1 == data->decoded.channels();
         histogramWidget->updateHistograms(data->histograms, gray);
     }
-    if (acceptanceEntireFileCheck->isChecked())
-        entireFileQualities << data->quality;
-    if (!thresholdSamplingArea.isEmpty()) {
-        QRect t = thresholdSamplingArea;
-        thresholdSamplingArea = QRect();
-        cv::Rect ct(t.x(), t.y(), t.width(), t.height());
-        cv::Mat_<float> m = data->grayscale(ct);
-        m = m.clone().reshape(1, m.total());
-        qSort(m);
-        // Disregard burnt pixels, so pick the 99% brightest.
-        thresholdSpinbox->setValue(m(.99 * m.total()));
-    }
-    if (!decodedImagePixelSize) {
-        decodedImagePixelSize = data->decoded.elemSize();
-        updateSettings();
+    if (data->stageSuccessful) {
+        if (acceptanceEntireFileCheck->isChecked()
+                && data->completedStages.contains(ProcessingStage::EstimateQuality))
+            entireFileQualities << data->quality;
+        if (data->completedStages.contains(ProcessingStage::Decode)) {
+            if (!thresholdSamplingArea.isEmpty()) {
+                QRect t = thresholdSamplingArea;
+                thresholdSamplingArea = QRect();
+                cv::Rect ct(t.x(), t.y(), t.width(), t.height());
+                cv::Mat_<float> m = data->grayscale(ct);
+                m = m.clone().reshape(1, m.total());
+                qSort(m);
+                // Disregard burnt pixels, so pick the 99% brightest.
+                thresholdSpinbox->setValue(m(.99 * m.total()));
+            }
+            if (!decodedImagePixelSize) {
+                decodedImagePixelSize = data->decoded.elemSize();
+                updateSettings();
+            }
+        }
     }
 }
 
