@@ -65,9 +65,6 @@ class ImageConfigWidget : public VideoSourceConfigurationWidget {
 public:
   ImageConfigWidget();
 
-signals:
-  void configurationComplete();
-
 public slots:
   void getFiles();
   void getDirectory();
