@@ -41,8 +41,6 @@ enum class ProcessingStage
     Save
 };
 
-QString getProcessingStageName(ProcessingStage stage);
-
 // Call this using QtConcurrent::run().
 SharedData processData(SharedData data);
 
@@ -95,6 +93,11 @@ struct PaintObject {
 
 typedef QList<PaintObject> PaintObjects;
 
+struct ProcessingException {
+    QString stageName;
+    QString errorMessage;
+};
+
 /*
  * A pointer to this struct is given to a processing stage.
  * A stages are ordered, so each can count on the data from
@@ -107,7 +110,7 @@ typedef QList<PaintObject> PaintObjects;
 struct ProcessingData {
     // A stage will use these for error handling.
     bool stageSuccessful;
-    QString errorMessage;
+    ProcessingException exception;
 
     QList<ProcessingStage> completedStages;
     // Settings are reference-counted to allow Foreman

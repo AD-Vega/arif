@@ -23,18 +23,6 @@
 #include <QFontMetrics>
 #include <cstdint>
 
-QString getProcessingStageName(ProcessingStage stage)
-{
-    static const QString names[] = {
-        "Decode",
-        "Render",
-        "Crop",
-        "EstimateQuality",
-        "Save"
-    };
-    return names[(int)stage];
-}
-
 void DecodeStage(SharedData d);
 void CropStage(SharedData d);
 void EstimateQualityStage(SharedData d);
@@ -43,23 +31,20 @@ void SaveStage(SharedData d);
 
 SharedData processData(SharedData data)
 {
-    static void (*stages[])(SharedData) = {
-        DecodeStage,
-        RenderStage,
-        CropStage,
-        EstimateQualityStage,
-        SaveStage,
-    };
-    if (data->onlyRender) {
+    data->stageSuccessful = true;
+    data->exception = ProcessingException({"processData", "no error"});
+    try {
         DecodeStage(data);
-        if (data->stageSuccessful)
-            RenderStage(data);
-    } else {
-        for (int i = 0; i < sizeof(stages) / sizeof(void*); i++) {
-            stages[i](data);
-            if (!data->stageSuccessful)
-                return data;
-        }
+        RenderStage(data);
+        if (data->onlyRender)
+            return data;
+        CropStage(data);
+        EstimateQualityStage(data);
+        SaveStage(data);
+    }
+    catch (ProcessingException& e) {
+        data->stageSuccessful = false;
+        data->exception = e;
     }
     return data;
 }
@@ -99,8 +84,6 @@ void DecodeStage(SharedData d)
         cv::cvtColor(d->decodedFloat, d->grayscale, CV_BGR2GRAY);
     else
         d->grayscale = d->decodedFloat;
-    d->stageSuccessful = true;
-    d->errorMessage.clear();
 }
 
 void CropStage(SharedData d)
@@ -113,8 +96,6 @@ void CropStage(SharedData d)
         d->cropArea = imageRect;
         d->cvCropArea = cv::Rect(imageRect.x(), imageRect.y(),
                                  imageRect.width(), imageRect.height());
-        d->stageSuccessful = true;
-        d->errorMessage.clear();
         return;
     }
 
@@ -141,8 +122,7 @@ void CropStage(SharedData d)
                              cropRect.width(), cropRect.height());
 
     if (!imageRect.contains(cropRect)) {
-        d->stageSuccessful = false;
-        d->errorMessage = "Crop rectangle out of image bounds";
+        throw ProcessingException({"Crop", "Crop rectangle out of image bounds"});
         if (d->doRender) {
             static const QPainterPath message = []{
                 QFont font;
@@ -180,8 +160,6 @@ void CropStage(SharedData d)
             po2.path.addRect(cropRect);
             d->paintObjects << po1 << po2;
         }
-        d->stageSuccessful = true;
-        d->errorMessage.clear();
     }
 }
 
@@ -267,11 +245,9 @@ void renderFrame(const cv::Mat frame, QImage* image_, bool markClipped = false,
 
 void RenderStage(SharedData d)
 {
-    if (!d->doRender) {
-        d->stageSuccessful = true;
-        d->errorMessage.clear();
+    if (!d->doRender)
         return;
-    }
+
     d->completedStages << ProcessingStage::Render;
     void (*theFunc) (const cv::Mat, QImage*, bool, Histograms*, bool);
     cv::Mat* M = &d->decoded;
@@ -297,8 +273,6 @@ void RenderStage(SharedData d)
     }
     theFunc(*M, &d->renderedFrame, d->settings->markClipped,
             d->histograms.data(), d->settings->logarithmicHistograms);
-    d->stageSuccessful = true;
-    d->errorMessage.clear();
 }
 
 void EstimateQualityStage(SharedData d)
@@ -317,15 +291,11 @@ void EstimateQualityStage(SharedData d)
         double signal = d->blurSignal.dot(d->blurSignal);
         d->quality = signal / noise;
     }
-    d->stageSuccessful = true;
-    d->errorMessage.clear();
 }
 
 void SaveStage(SharedData d)
 {
     d->completedStages << ProcessingStage::Save;
-    d->stageSuccessful = true;
-    d->errorMessage.clear();
 
     auto& meta = d->rawFrame->metaData;
     QString fnTemplate("%1/frame-%2-%3-q%4");
@@ -346,9 +316,8 @@ void SaveStage(SharedData d)
                   (d->settings->filterType == QualityFilterType::MinimumQuality && d->accepted);
     doSave = doSave && d->settings->saveImages;
     if (doSave) {
-        d->stageSuccessful = saveImage(d->decoded(d->cvCropArea), filename);
-        if (!d->stageSuccessful)
-            d->errorMessage = "filename " + filename;
+        if (!saveImage(d->decoded(d->cvCropArea), filename))
+            throw ProcessingException({"Save", "filename " + filename});
     }
 }
 

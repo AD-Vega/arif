@@ -95,7 +95,7 @@ void Foreman::processingComplete()
     if (!d->stageSuccessful) {
         auto previousStage = d->completedStages.last();
         QString msg("Processing stage %1 failed: %2");
-        qDebug() << msg.arg(getProcessingStageName(previousStage), d->errorMessage);
+        qDebug() << msg.arg(d->exception.stageName, d->exception.errorMessage);
         if (previousStage == ProcessingStage::Save) {
             qDebug() << "Error writing image, saving disabled.";
             auto s = new ProcessingSettings;
