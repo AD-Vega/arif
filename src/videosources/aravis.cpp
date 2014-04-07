@@ -94,6 +94,7 @@ void AravisReader::getFrame()
 {
     auto f = new AravisFrame;
     f->frame = camera->getFrame(true, true);
+    f->metaData = makeMetaData();
     emit frameReady(SharedRawFrame(f));
 }
 
