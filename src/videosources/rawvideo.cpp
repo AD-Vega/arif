@@ -206,6 +206,7 @@ void RawVideoReader::asyncReadComplete(SharedRawFrame frame, QString err)
     if (!err.isNull()) {
             emit error(err);
     } else {
+        frame->metaData = makeMetaData();
         if (live) {
             emit frameReady(frame);
         } else if (readerSlowEmitNextFrame) {
