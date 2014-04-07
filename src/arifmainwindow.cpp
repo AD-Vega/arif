@@ -236,7 +236,8 @@ void ArifMainWindow::on_processButton_toggled(bool checked)
 
 void ArifMainWindow::on_imageDestinationButton_clicked(bool checked)
 {
-  auto dirname = QFileDialog::getExistingDirectory(this, "Open directory");
+  auto dirname = QFileDialog::getExistingDirectory(this, "Open directory",
+                   imageDestinationDirectory->text());
   if (!dirname.isNull()) {
     imageDestinationDirectory->setText(dirname);
   }
