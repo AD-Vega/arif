@@ -122,7 +122,6 @@ void CropStage(SharedData d)
                              cropRect.width(), cropRect.height());
 
     if (!imageRect.contains(cropRect)) {
-        throw ProcessingException({"Crop", "Crop rectangle out of image bounds"});
         if (d->doRender) {
             static const QPainterPath message = []{
                 QFont font;
@@ -147,6 +146,7 @@ void CropStage(SharedData d)
             po2.path.translate(0, d->renderedFrame.height());
             d->paintObjects << po1 << po2;
         }
+        throw ProcessingException({"Crop", "Crop rectangle out of image bounds"});
     } else {
         if (d->doRender) {
             PaintObject po1;
