@@ -101,6 +101,7 @@ void ImageReader::readFrame()
     } else {
         auto F = ImageSource::instance->createRawFrame();
         auto f = static_cast<ImageFrame*>(F.data());
+        f->metaData = makeMetaData();
         f->filename = filenames.at(current++);
         emit frameReady(F);
     }
