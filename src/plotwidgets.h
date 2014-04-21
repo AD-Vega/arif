@@ -35,6 +35,7 @@ public:
 public slots:
     void setShortGraphMaxFrames(int frames);
     void addFrameStats(SharedData data);
+    void addLine();
     void clear();
     void draw();
 

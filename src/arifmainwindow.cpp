@@ -229,6 +229,7 @@ void ArifMainWindow::on_processButton_toggled(bool checked)
         processButton->setEnabled(false);
         // Reenable once foreman actually finishes.
         foreman->stop();
+        qualityGraph->addLine();
     }
     bool haveFile = !checked && !settings.plugin->reader()->isSequential();
     acceptanceEntireFileCheck->setEnabled(haveFile);

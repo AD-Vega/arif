@@ -108,10 +108,22 @@ void QualityGraph::addFrameStats(SharedData data)
     }
 }
 
+void QualityGraph::addLine()
+{
+    QPen pen(Qt::DashLine);
+    pen.setColor(color1);
+    auto line = new QCPItemStraightLine(this);
+    line->setPen(pen);
+    line->point1->setCoords(counter, 0);
+    line->point2->setCoords(counter, 1);
+    addItem(line);
+}
+
 void QualityGraph::clear()
 {
     counter = 0;
     longGraph->clearData();
+    clearItems();
     shortGraph->clearData();
     showSamplingText();
     replot();
