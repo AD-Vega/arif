@@ -106,6 +106,7 @@ void QualityGraph::addFrameStats(SharedData data)
 
 void QualityGraph::clear()
 {
+    counter = 0;
     longGraph->clearData();
     shortGraph->clearData();
     showSamplingText();
