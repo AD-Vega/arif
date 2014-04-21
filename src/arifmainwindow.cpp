@@ -262,6 +262,7 @@ void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
     saveImagesCheck->setEnabled(!checked);
     filterCheck->setEnabled(!checked);
     seekSlider->setEnabled(!checked);
+    calculateQualityCheck->setEnabled(!checked);
     auto self = qobject_cast<QWidget*>(acceptanceEntireFileCheck);
     auto acceptance = qobject_cast<QWidget*>(acceptanceSpinbox);
     auto acceptanceLbl = qobject_cast<QWidget*>(acceptanceSpinboxLabel);
@@ -273,6 +274,17 @@ void ArifMainWindow::on_acceptanceEntireFileCheck_toggled(bool checked)
             wgt != acceptanceLbl)
             wgt->setEnabled(!checked);
     }
+}
+
+void ArifMainWindow::on_calculateQualityCheck_toggled(bool checked)
+{
+    filterCheck->setEnabled(checked);
+    if (!checked) {
+        filterCheck->setChecked(false);
+        qualityGraph->addLine();
+    }
+    acceptanceEntireFileCheck->setEnabled(checked && !settings.plugin->reader()->isSequential());
+    updateSettings();
 }
 
 void ArifMainWindow::foremanStopped()
@@ -324,6 +336,7 @@ void ArifMainWindow::updateSettings()
     settings.threshold = thresholdSpinbox->value();
     settings.logarithmicHistograms = histogramLogarithmicCheck->isChecked();
     settings.markClipped = markClippedCheck->isChecked();
+    settings.estimateQuality = calculateQualityCheck->isChecked();
     settings.noiseSigma = noiseSigmaSpinbox->value();
     settings.signalSigma = signalSigmaSpinbox->value();
     settings.saveImages = saveImagesCheck->isChecked();
@@ -354,7 +367,8 @@ void ArifMainWindow::updateSettings()
     mem *= settings.filterQueueLength;
     mem /= 1024*1024;
     memoryLabel->setText(QString("%1 Mb").arg(mem));
-    foreman->updateSettings(settings);
+    if (foreman)
+        foreman->updateSettings(settings);
 }
 
 void ArifMainWindow::incrementSlider()
@@ -420,6 +434,7 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("processing/crop", cropCheck->isChecked());
     config.setValue("processing/loghistogram", histogramLogarithmicCheck->isChecked());
     config.setValue("processing/markclipped", markClippedCheck->isChecked());
+    config.setValue("processing/estimatequality", calculateQualityCheck->isChecked());
     config.setValue("filtering/choice", filterMinimumQuality->isChecked());
     config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
     config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
@@ -441,6 +456,7 @@ void ArifMainWindow::restoreProgramSettings()
     cropCheck->setChecked(config.value("processing/crop", true).toBool());
     histogramLogarithmicCheck->setChecked(config.value("processing/loghistogram").toBool());
     markClippedCheck->setChecked(config.value("processing/markclipped").toBool());
+    calculateQualityCheck->setChecked(config.value("processing/estimatequality", true).toBool());
     bool choice = config.value("filtering/choice", false).toBool();
     filterMinimumQuality->setChecked(choice);
     minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());

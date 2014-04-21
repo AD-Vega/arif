@@ -54,6 +54,7 @@ private slots: // UI widget events
     void on_imageDestinationButton_clicked(bool checked);
     void on_seekSlider_valueChanged(int val);
     void on_acceptanceEntireFileCheck_toggled(bool checked);
+    void on_calculateQualityCheck_toggled(bool checked);
 
 private:
     void closeEvent(QCloseEvent* event);

@@ -277,6 +277,10 @@ void RenderStage(SharedData d)
 
 void EstimateQualityStage(SharedData d)
 {
+    if (!d->settings->estimateQuality) {
+        d->quality = 0;
+        return;
+    }
     d->completedStages << ProcessingStage::EstimateQuality;
     cv::GaussianBlur(d->decodedFloat, d->blurNoise,
                      cv::Size(0, 0), d->settings->noiseSigma);

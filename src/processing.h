@@ -70,6 +70,7 @@ struct ProcessingSettings {
     bool markClipped;
     bool logarithmicHistograms;
     // EstimateQuality
+    bool estimateQuality;
     double noiseSigma, signalSigma;
     // Save
     bool saveImages;
