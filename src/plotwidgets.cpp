@@ -86,7 +86,11 @@ QualityGraph::QualityGraph(QWidget* parent):
 void QualityGraph::setShortGraphMaxFrames(int frames)
 {
     shortLength = frames;
+    if (shortGraph->data()->size() > shortLength) {
+        shortGraph->removeDataBefore(counter - shortLength);
+    }
     xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
+    replot();
 }
 
 void QualityGraph::addFrameStats(SharedData data)
