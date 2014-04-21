@@ -32,11 +32,11 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin, QWidget* videoControls
 {
     settings.plugin = plugin;
     setupUi(this);
-    sourceControlDock = new QDockWidget("Arif video control", this);
-    sourceControlDock->setObjectName("arifVideoControl");
-    sourceControlDock->setFeatures(sourceControlDock->features() & ~QDockWidget::DockWidgetClosable);
     if (sourceControl) {
         sourceControlDock->setWidget(sourceControl);
+        sourceControlDock->setVisible(true);
+    } else {
+        sourceControlDock->setVisible(false);
     }
     // Delay initialization until a later event loop cycle.
     QTimer::singleShot(0, this, SLOT(initialize()));

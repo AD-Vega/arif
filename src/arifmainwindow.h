@@ -72,7 +72,6 @@ private:
     uint missedFrames = 0;
     uint rejectedFrames = 0;
     QWidget* sourceControl;
-    QDockWidget* sourceControlDock;
 };
 
 #endif
