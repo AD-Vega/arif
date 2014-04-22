@@ -21,9 +21,14 @@
 #include <QSettings>
 #include <QMessageBox>
 #include <QFileDialog>
+#include <QMetaType>
+#include <QInputDialog>
 
 #include <QDebug>
 #include <cassert>
+
+typedef QMap<QString, EstimatorSettings> Presets;
+Q_DECLARE_METATYPE(Presets)
 
 static uint fpsUpdateSec = 3;
 
@@ -287,6 +292,34 @@ void ArifMainWindow::on_calculateQualityCheck_toggled(bool checked)
     updateSettings();
 }
 
+void ArifMainWindow::on_estimatorPresetCombo_activated(int index)
+{
+    estimatorPresetDelete->setEnabled(index != 0);
+    if (index == 0) {
+        auto name = QInputDialog::getText(this, "Choose preset name", "Preset name:");
+        if (!name.isEmpty()) {
+            EstimatorSettings s;
+            s.noiseSigma = noiseSigmaSpinbox->value();
+            s.signalSigma = signalSigmaSpinbox->value();
+            estimatorPresetCombo->insertItem(estimatorPresetCombo->count(),
+                                             name, QVariant::fromValue(s));
+        }
+    } else {
+        auto s = estimatorPresetCombo->itemData(index).value<EstimatorSettings>();
+        signalSigmaSpinbox->setValue(s.signalSigma);
+        noiseSigmaSpinbox->setValue(s.noiseSigma);
+    }
+}
+
+void ArifMainWindow::on_estimatorPresetDelete_clicked(bool checked)
+{
+    estimatorPresetCombo->blockSignals(true);
+    estimatorPresetCombo->removeItem(estimatorPresetCombo->currentIndex());
+    estimatorPresetCombo->setCurrentIndex(0);
+    estimatorPresetDelete->setEnabled(false);
+    estimatorPresetCombo->blockSignals(false);
+}
+
 void ArifMainWindow::foremanStopped()
 {
     processButton->setEnabled(true);
@@ -337,8 +370,8 @@ void ArifMainWindow::updateSettings()
     settings.logarithmicHistograms = histogramLogarithmicCheck->isChecked();
     settings.markClipped = markClippedCheck->isChecked();
     settings.estimateQuality = calculateQualityCheck->isChecked();
-    settings.noiseSigma = noiseSigmaSpinbox->value();
-    settings.signalSigma = signalSigmaSpinbox->value();
+    settings.estimatorSettings.noiseSigma = noiseSigmaSpinbox->value();
+    settings.estimatorSettings.signalSigma = signalSigmaSpinbox->value();
     settings.saveImages = saveImagesCheck->isChecked();
     imageDestinationBox->setEnabled(!settings.saveImages);
     settings.saveImagesDirectory = imageDestinationDirectory->text();
@@ -441,6 +474,13 @@ void ArifMainWindow::saveProgramSettings()
     config.setValue("filtering/filterqueue", filterQueueSpinbox->value());
     config.setValue("display/shortgraphlength", shortGraphLength->value());
     config.setValue("display/displayenabled", displayCheck->isChecked());
+
+    Presets presets;
+    for (int i = 1; i < estimatorPresetCombo->count(); ++i) {
+        presets[estimatorPresetCombo->itemText(i)] =
+            estimatorPresetCombo->itemData(i).value<EstimatorSettings>();
+    }
+    config.setValue("processing/estimatorpresets", QVariant::fromValue(presets));
 }
 
 void ArifMainWindow::restoreProgramSettings()
@@ -464,4 +504,19 @@ void ArifMainWindow::restoreProgramSettings()
     filterQueueSpinbox->setValue(config.value("filtering/filterqueue", 10).toInt());
     shortGraphLength->setValue(config.value("display/shortgraphlength", 1000).toInt());
     displayCheck->setChecked(config.value("display/displayenabled", true).toBool());
+
+    Presets presets = config.value("processing/estimatorpresets").value<Presets>();
+    estimatorPresetCombo->addItem("Add new preset...");
+    for (auto i = presets.constBegin(), end = presets.constEnd(); i != end; ++i) {
+        estimatorPresetCombo->addItem(i.key(), QVariant::fromValue(i.value()));
+    }
 }
+
+static int registerTypes()
+{
+    qRegisterMetaType<Presets>("Presets");
+    qRegisterMetaTypeStreamOperators<Presets>("Presets");
+    return 0;
+}
+
+static int __register = registerTypes();

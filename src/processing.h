@@ -57,6 +57,16 @@ enum class QualityFilterType
     // pass using MinimumQuality.
 };
 
+struct EstimatorSettings
+{
+    double noiseSigma, signalSigma;
+};
+Q_DECLARE_METATYPE(EstimatorSettings)
+
+// Enable QSettings to store EstimatorSettings.
+QDataStream &operator<<(QDataStream &out, const EstimatorSettings &myObj);
+QDataStream &operator>>(QDataStream &in, EstimatorSettings &myObj);
+
 struct ProcessingSettings {
     // This will never be changed once the source is chosen
     VideoSourcePlugin* plugin;
@@ -71,7 +81,7 @@ struct ProcessingSettings {
     bool logarithmicHistograms;
     // EstimateQuality
     bool estimateQuality;
-    double noiseSigma, signalSigma;
+    EstimatorSettings estimatorSettings;
     // Save
     bool saveImages;
     QString saveImagesDirectory;

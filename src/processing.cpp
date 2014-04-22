@@ -23,6 +23,27 @@
 #include <QFontMetrics>
 #include <cstdint>
 
+static int registerTypes()
+{
+    qRegisterMetaType<EstimatorSettings>("EstimatorSettings");
+    qRegisterMetaTypeStreamOperators<EstimatorSettings>("EstimatorSettings");
+    return 0;
+}
+
+static int __register = registerTypes();
+
+QDataStream& operator<<(QDataStream& out, const EstimatorSettings& myObj)
+{
+    out << myObj.signalSigma << myObj.noiseSigma;
+    return out;
+}
+
+QDataStream& operator>>(QDataStream& in, EstimatorSettings& myObj)
+{
+    in >> myObj.signalSigma >> myObj.noiseSigma;
+    return in;
+}
+
 void DecodeStage(SharedData d);
 void CropStage(SharedData d);
 void EstimateQualityStage(SharedData d);
@@ -283,9 +304,9 @@ void EstimateQualityStage(SharedData d)
     }
     d->completedStages << ProcessingStage::EstimateQuality;
     cv::GaussianBlur(d->decodedFloat, d->blurNoise,
-                     cv::Size(0, 0), d->settings->noiseSigma);
+                     cv::Size(0, 0), d->settings->estimatorSettings.noiseSigma);
     cv::GaussianBlur(d->blurNoise, d->blurSignal,
-                     cv::Size(0, 0), d->settings->signalSigma);
+                     cv::Size(0, 0), d->settings->estimatorSettings.signalSigma);
     cv::subtract(d->blurNoise, d->blurSignal, d->blurSignal);
     cv::subtract(d->decodedFloat, d->blurNoise, d->blurNoise);
     double noise = d->blurNoise.dot(d->blurNoise);

@@ -55,6 +55,8 @@ private slots: // UI widget events
     void on_seekSlider_valueChanged(int val);
     void on_acceptanceEntireFileCheck_toggled(bool checked);
     void on_calculateQualityCheck_toggled(bool checked);
+    void on_estimatorPresetCombo_activated(int index);
+    void on_estimatorPresetDelete_clicked(bool checked);
 
 private:
     void closeEvent(QCloseEvent* event);
