@@ -240,7 +240,7 @@ void RawVideoReader::setupAsio(int fd)
                                   Qt::QueuedConnection,
                                   Q_ARG(SharedRawFrame, frame->copy()),
                                   Q_ARG(QString, msg));
-        if (live)
+        if (live && msg.isEmpty())
             asioRead();
     };
     stream = decltype(stream)(service, fd);
