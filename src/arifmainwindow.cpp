@@ -327,12 +327,14 @@ void ArifMainWindow::foremanStopped()
 
 void ArifMainWindow::readerError(QString error)
 {
-    processButton->setChecked(false);
+    foreman->disconnect();
+    settings.plugin->reader()->disconnect();
+    auto restartmsg = QString("\n") + tr("This program has to be restarted.");
     if (error.isNull())
-        error = tr("No error message given, video source needs fixing.");
+        error = tr("No error message given, video source needs fixing.") + restartmsg;
     QMessageBox::critical(this,
                           tr("Video source error"),
-                          error);
+                          error + restartmsg);
 }
 
 void ArifMainWindow::readerFinished()
