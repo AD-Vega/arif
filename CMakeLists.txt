@@ -30,12 +30,14 @@ set_prefixed(arif_videosources_SRC videosources/
   rawvideo.cpp
   images.cpp
   aravis.cpp
+  qarvvideo.cpp
 )
 set_prefixed(arif_videosources_MOC videosources/
   interfaces.h
   rawvideo.h
   images.h
   aravis.h
+  qarvvideo.h
 )
 set_prefixed(arif_UI_pre src/
   arifmainwindow.ui
