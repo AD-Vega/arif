@@ -312,6 +312,18 @@ void ArifMainWindow::on_estimatorPresetDelete_clicked(bool checked)
     estimatorPresetCombo->blockSignals(false);
 }
 
+void ArifMainWindow::on_exportSettingsButton_clicked(bool checked)
+{
+    auto filename = QFileDialog::getSaveFileName(this, "Settings file");
+    if (!filename.isNull()) {
+        QSettings(filename, QSettings::IniFormat)
+        .setValue("settings/source",
+                  QVariant::fromValue(settings.plugin->name()));
+        settings.plugin->saveSettings(filename);
+        saveProgramSettings(filename);
+  }
+}
+
 void ArifMainWindow::foremanStopped()
 {
     processButton->setEnabled(true);
@@ -440,64 +452,74 @@ void ArifMainWindow::closeEvent(QCloseEvent* event)
     QWidget::closeEvent(event);
 }
 
-void ArifMainWindow::saveProgramSettings()
+void ArifMainWindow::saveProgramSettings(QString filename)
 {
-    QSettings config;
-    config.setValue("mainwindow/size", size());
-    config.setValue("mainwindow/position", pos());
-    config.setValue("mainwindow/state", saveState());
-    config.setValue("mainwindow/displayinterval", displayInterval->value());
-    config.setValue("processing/negative", negativeCheck->isChecked());
-    config.setValue("processing/cropwidth", cropWidthBox->value());
-    config.setValue("processing/saveimages", imageDestinationDirectory->text());
-    config.setValue("processing/noisesigma", noiseSigmaSpinbox->value());
-    config.setValue("processing/signalsigma", signalSigmaSpinbox->value());
-    config.setValue("processing/threshold", thresholdSpinbox->value());
-    config.setValue("processing/crop", cropCheck->isChecked());
-    config.setValue("processing/loghistogram", histogramLogarithmicCheck->isChecked());
-    config.setValue("processing/markclipped", markClippedCheck->isChecked());
-    config.setValue("processing/estimatequality", calculateQualityCheck->isChecked());
-    config.setValue("filtering/choice", filterMinimumQuality->isChecked());
-    config.setValue("filtering/minimumquality", minimumQualitySpinbox->value());
-    config.setValue("filtering/acceptancerate", acceptanceSpinbox->value());
-    config.setValue("filtering/filterqueue", filterQueueSpinbox->value());
-    config.setValue("display/shortgraphlength", shortGraphLength->value());
-    config.setValue("display/displayenabled", displayCheck->isChecked());
+    QScopedPointer<QSettings> config;
+    if (filename.isEmpty())
+        config.reset(new QSettings);
+    else
+        config.reset(new QSettings(filename, QSettings::IniFormat));
+
+    config->setValue("mainwindow/size", size());
+    config->setValue("mainwindow/position", pos());
+    config->setValue("mainwindow/state", saveState());
+    config->setValue("mainwindow/displayinterval", displayInterval->value());
+    config->setValue("processing/negative", negativeCheck->isChecked());
+    config->setValue("processing/cropwidth", cropWidthBox->value());
+    config->setValue("processing/saveimages", imageDestinationDirectory->text());
+    config->setValue("processing/noisesigma", noiseSigmaSpinbox->value());
+    config->setValue("processing/signalsigma", signalSigmaSpinbox->value());
+    config->setValue("processing/threshold", thresholdSpinbox->value());
+    config->setValue("processing/crop", cropCheck->isChecked());
+    config->setValue("processing/loghistogram", histogramLogarithmicCheck->isChecked());
+    config->setValue("processing/markclipped", markClippedCheck->isChecked());
+    config->setValue("processing/estimatequality", calculateQualityCheck->isChecked());
+    config->setValue("filtering/choice", filterMinimumQuality->isChecked());
+    config->setValue("filtering/minimumquality", minimumQualitySpinbox->value());
+    config->setValue("filtering/acceptancerate", acceptanceSpinbox->value());
+    config->setValue("filtering/filterqueue", filterQueueSpinbox->value());
+    config->setValue("display/shortgraphlength", shortGraphLength->value());
+    config->setValue("display/displayenabled", displayCheck->isChecked());
 
     Presets presets;
     for (int i = 1; i < estimatorPresetCombo->count(); ++i) {
         presets[estimatorPresetCombo->itemText(i)] =
             estimatorPresetCombo->itemData(i).value<EstimatorSettings>();
     }
-    config.setValue("processing/estimatorpresets", QVariant::fromValue(presets));
+    config->setValue("processing/estimatorpresets", QVariant::fromValue(presets));
 }
 
-void ArifMainWindow::restoreProgramSettings()
+void ArifMainWindow::restoreProgramSettings(QString filename)
 {
-    QSettings config;
-    resize(config.value("mainwindow/size", QSize(1, 1)).toSize());
-    move(config.value("mainwindow/size").toPoint());
-    restoreState(config.value("mainwindow/state").toByteArray());
-    displayInterval->setValue(config.value("mainwindow/displayinterval", 10).toInt());
-    negativeCheck->setChecked(config.value("processing/negative", false).toBool());
-    cropWidthBox->setValue(config.value("processing/cropwidth", 100).toInt());
-    imageDestinationDirectory->setText(config.value("processing/saveimages").toString());
-    noiseSigmaSpinbox->setValue(config.value("processing/noisesigma", 1.0).toDouble());
-    signalSigmaSpinbox->setValue(config.value("processing/signalsigma", 4.0).toDouble());
-    thresholdSpinbox->setValue(config.value("processing/threshold", 0.0).toDouble());
-    cropCheck->setChecked(config.value("processing/crop", true).toBool());
-    histogramLogarithmicCheck->setChecked(config.value("processing/loghistogram").toBool());
-    markClippedCheck->setChecked(config.value("processing/markclipped").toBool());
-    calculateQualityCheck->setChecked(config.value("processing/estimatequality", true).toBool());
-    bool choice = config.value("filtering/choice", false).toBool();
-    filterMinimumQuality->setChecked(choice);
-    minimumQualitySpinbox->setValue(config.value("filtering/minimumquality", 0.0).toDouble());
-    acceptanceSpinbox->setValue(config.value("filtering/acceptancerate", 100).toInt());
-    filterQueueSpinbox->setValue(config.value("filtering/filterqueue", 10).toInt());
-    shortGraphLength->setValue(config.value("display/shortgraphlength", 1000).toInt());
-    displayCheck->setChecked(config.value("display/displayenabled", true).toBool());
+    QScopedPointer<QSettings> config;
+    if (filename.isEmpty())
+        config.reset(new QSettings);
+    else
+        config.reset(new QSettings(filename, QSettings::IniFormat));
 
-    Presets presets = config.value("processing/estimatorpresets").value<Presets>();
+    resize(config->value("mainwindow/size", QSize(1, 1)).toSize());
+    move(config->value("mainwindow/size").toPoint());
+    restoreState(config->value("mainwindow/state").toByteArray());
+    displayInterval->setValue(config->value("mainwindow/displayinterval", 10).toInt());
+    negativeCheck->setChecked(config->value("processing/negative", false).toBool());
+    cropWidthBox->setValue(config->value("processing/cropwidth", 100).toInt());
+    imageDestinationDirectory->setText(config->value("processing/saveimages").toString());
+    noiseSigmaSpinbox->setValue(config->value("processing/noisesigma", 1.0).toDouble());
+    signalSigmaSpinbox->setValue(config->value("processing/signalsigma", 4.0).toDouble());
+    thresholdSpinbox->setValue(config->value("processing/threshold", 0.0).toDouble());
+    cropCheck->setChecked(config->value("processing/crop", true).toBool());
+    histogramLogarithmicCheck->setChecked(config->value("processing/loghistogram").toBool());
+    markClippedCheck->setChecked(config->value("processing/markclipped").toBool());
+    calculateQualityCheck->setChecked(config->value("processing/estimatequality", true).toBool());
+    bool choice = config->value("filtering/choice", false).toBool();
+    filterMinimumQuality->setChecked(choice);
+    minimumQualitySpinbox->setValue(config->value("filtering/minimumquality", 0.0).toDouble());
+    acceptanceSpinbox->setValue(config->value("filtering/acceptancerate", 100).toInt());
+    filterQueueSpinbox->setValue(config->value("filtering/filterqueue", 10).toInt());
+    shortGraphLength->setValue(config->value("display/shortgraphlength", 1000).toInt());
+    displayCheck->setChecked(config->value("display/displayenabled", true).toBool());
+
+    Presets presets = config->value("processing/estimatorpresets").value<Presets>();
     estimatorPresetCombo->addItem("Add new preset...");
     for (auto i = presets.constBegin(), end = presets.constEnd(); i != end; ++i) {
         estimatorPresetCombo->addItem(i.key(), QVariant::fromValue(i.value()));

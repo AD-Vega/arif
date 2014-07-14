@@ -56,11 +56,12 @@ private slots: // UI widget events
     void on_calculateQualityCheck_toggled(bool checked);
     void on_estimatorPresetCombo_activated(int index);
     void on_estimatorPresetDelete_clicked(bool checked);
+    void on_exportSettingsButton_clicked(bool checked);
 
 private:
     void closeEvent(QCloseEvent* event);
-    void saveProgramSettings();
-    void restoreProgramSettings();
+    void saveProgramSettings(QString filename = QString{});
+    void restoreProgramSettings(QString filename = QString{});
 
 private:
     ProcessingSettings settings;
