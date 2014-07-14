@@ -133,7 +133,7 @@ public:
     void saveSettings(QString file = QString{});
 
     // This function names the settings group for the plugin.
-    virtual QString settingsGroup() { return QString{}; } // TODO: make pure virtual when everything is ported
+    virtual QString settingsGroup() = 0;
 
     // Settings values for the plugin, filled either by
     // readSettings() or VideoSourceConfigurationWidget.
@@ -144,7 +144,7 @@ public:
     // on success, or the error description on failure.
     // The optional argument allows the caller to specify where the
     // video is to be read from, regardless of the settings.
-    virtual QString initialize(QString overrideInput = QString{}) { return QString{}; } // TODO: make pure virtual when everything is ported
+    virtual QString initialize(QString overrideInput = QString{}) = 0;
 };
 
 Q_DECLARE_INTERFACE(VideoSourcePlugin,
