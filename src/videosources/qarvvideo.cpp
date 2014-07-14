@@ -169,23 +169,16 @@ QArvSourceConfigWidget::QArvSourceConfigWidget() :
 
 void QArvSourceConfigWidget::checkConfig()
 {
-    auto name = fileName->text();
-    if (QFileInfo(name).isReadable()) {
-        QArvVideoSource* s = QArvVideoSource::instance;
-        s->reader_.reset(new QArvVideoReader(name));
-        auto& qv = s->reader_->qarvVideo;
-        if (!qv.status())
-            goto error_report;
-        s->size = qv.frameSize();
-        s->frameBytes = qv.frameBytes();
-        saveConfig();
-        emit configurationComplete();
-    } else {
-    error_report:
+    saveConfig();
+    auto error = QArvVideoSource::instance->initialize();
+    if (!error.isEmpty()) {
         QMessageBox tmp;
         tmp.setWindowTitle("File error");
-        tmp.setText("Selected file is not readable.");
+        tmp.setText(error);
         tmp.exec();
+    } else {
+        QArvVideoSource::instance->saveSettings();
+        emit configurationComplete();
     }
 }
 
@@ -200,16 +193,15 @@ void QArvSourceConfigWidget::getFile()
 
 void QArvSourceConfigWidget::saveConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + QArvVideoSource::instance->name());
-    config.setValue("file", fileName->text());
+    auto s = QArvVideoSource::instance;
+    s->settings.insert("file", fileName->text());
 }
 
 void QArvSourceConfigWidget::restoreConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + QArvVideoSource::instance->name());
-    fileName->setText(config.value("file").toString());
+    auto s = QArvVideoSource::instance;
+    s->readSettings();
+    fileName->setText(s->settings.value("file").toString());
 }
 
 QString QArvVideoSource::name()
@@ -220,6 +212,11 @@ QString QArvVideoSource::name()
 QString QArvVideoSource::readableName()
 {
     return "QArv video file";
+}
+
+QString QArvVideoSource::settingsGroup()
+{
+    return "format_" + QArvVideoSource::instance->name();
 }
 
 VideoSourceConfigurationWidget* QArvVideoSource::createConfigurationWidget()
@@ -251,6 +248,22 @@ SharedRawFrame QArvVideoSource::createRawFrame()
 Reader* QArvVideoSource::reader()
 {
     return reader_.data();
+}
+
+QString QArvVideoSource::initialize(QString overrideInput)
+{
+    auto name = overrideInput.isEmpty() ? settings.value("file").toString() : overrideInput;
+    if (QFileInfo(name).isReadable()) {
+        reader_.reset(new QArvVideoReader(name));
+        auto& qv = reader_->qarvVideo;
+        if (!qv.status()) {
+            return "File error: selected file is not readable.";
+        }
+        size = qv.frameSize();
+        frameBytes = qv.frameBytes();
+        return QString{};
+    }
+    return "Error opening video.";
 }
 
 Q_EXPORT_PLUGIN2(QArvVideo, QArvVideo::QArvVideoSource)

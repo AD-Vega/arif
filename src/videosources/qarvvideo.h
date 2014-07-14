@@ -43,6 +43,8 @@ public:
     SharedRawFrame createRawFrame();
     SharedDecoder createDecoder();
     Reader* reader();
+    QString settingsGroup();
+    QString initialize(QString overrideInput = QString{});
 
     static QArvVideoSource* instance;
 
