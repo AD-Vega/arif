@@ -120,6 +120,16 @@ QString AravisSource::readableName()
     return "Ethernet camera";
 }
 
+QString AravisSource::settingsGroup()
+{
+    return "";
+}
+
+QString AravisSource::initialize(QString overrideInput)
+{
+    return QString{};
+}
+
 Reader* AravisSource::reader()
 {
     return reader_.data();
