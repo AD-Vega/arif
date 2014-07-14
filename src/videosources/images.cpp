@@ -124,6 +124,11 @@ QString ImageSource::readableName()
     return "Image files";
 }
 
+QString ImageSource::settingsGroup()
+{
+    return "format_" + ImageSource::instance->name();
+}
+
 Reader* ImageSource::reader()
 {
     return reader_.data();
@@ -192,12 +197,13 @@ ImageConfigWidget::ImageConfigWidget():
 
 void ImageConfigWidget::getFiles()
 {
-    selectedFiles = QFileDialog::getOpenFileNames();
-    if (selectedFiles.size() == 1)
-        fileName->setText(selectedFiles.at(0));
-    else if (selectedFiles.size() > 1) {
+    auto s = ImageSource::instance;
+    s->selectedFiles = QFileDialog::getOpenFileNames();
+    if (s->selectedFiles.size() == 1)
+        fileName->setText(s->selectedFiles.at(0));
+    else if (s->selectedFiles.size() > 1) {
         fileName->setPlaceholderText("(" +
-                                     QString::number(selectedFiles.size()) +
+                                     QString::number(s->selectedFiles.size()) +
                                      " files)");
         fileName->clear();
         connect(fileName, SIGNAL(textChanged(QString)),
@@ -207,7 +213,8 @@ void ImageConfigWidget::getFiles()
 
 void ImageConfigWidget::invalidateSelection()
 {
-    selectedFiles = QStringList();
+    auto s = ImageSource::instance;
+    s->selectedFiles = QStringList();
     fileName->setPlaceholderText(QString());
     disconnect(fileName, SIGNAL(textChanged(QString)),
                this, SLOT(invalidateSelection()));
@@ -222,36 +229,18 @@ void ImageConfigWidget::getDirectory()
 
 void ImageConfigWidget::checkConfig()
 {
-    QStringList files;
-    if (fileRadio->isChecked()) {
-        auto filename = fileName->text();
-        if (filename.isEmpty()) {
-            if (selectedFiles.size() > 0)
-                files = selectedFiles;
-        } else {
-            if (QFileInfo(filename).isReadable())
-                files = loadFilesFromIndex(filename);
-            else {
-                QMessageBox::critical(this, "File error",
-                                      "Selected file is not readable.");
-            }
-        }
-    } else if (directoryRadio->isChecked()) {
-        auto dirname = directoryName->text();
-        if (QFileInfo(dirname).isDir())
-            files = loadFilesFromDirectory(dirname);
-        else {
-            QMessageBox::critical(this, "Directory error",
-                                  "Selected directory is not valid.");
-        }
-    }
-    if ((files.size() > 0) && queryFrameSize(files.first())) {
-        ImageSource::instance->reader_.reset(new ImageReader(files));
+    saveConfig();
+    auto s = ImageSource::instance;
+    auto status = s->initialize();
+    if (!status.isEmpty()) {
+        QMessageBox::critical(this, "Image source error", status);
+    } else {
+        s->saveSettings();
         emit(configurationComplete());
     }
 }
 
-QStringList ImageConfigWidget::loadFilesFromIndex(QString indexfile)
+static QStringList loadFilesFromIndex(QString indexfile)
 {
     QFile imagelist(indexfile);
     imagelist.open(QIODevice::ReadOnly);
@@ -264,7 +253,7 @@ QStringList ImageConfigWidget::loadFilesFromIndex(QString indexfile)
     return files;
 }
 
-QStringList ImageConfigWidget::loadFilesFromDirectory(QString directory)
+static QStringList loadFilesFromDirectory(QString directory)
 {
     QDir dir(directory);
     QStringList files(dir.entryList(QDir::Files, QDir::Name));
@@ -274,43 +263,74 @@ QStringList ImageConfigWidget::loadFilesFromDirectory(QString directory)
     return absFiles;
 }
 
-bool ImageConfigWidget::queryFrameSize(QString file)
+static bool queryFrameSize(QString file)
 {
     try {
         auto testimage = cv::imread(file.toStdString());
         ImageSource::instance->size = QSize(testimage.cols, testimage.rows);
         return true;
-    }
- catch (std::exception& e) {
-        QMessageBox::critical(this, "Could not determine frame size", e.what());
+    } catch (std::exception& e) {
         return false;
     }
 }
 
 void ImageConfigWidget::saveConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + ImageSource::instance->name());
+    auto s = ImageSource::instance;
     if (fileRadio->isChecked())
-        config.setValue("type", "file");
+        s->settings.insert("type", "file");
     else
-        config.setValue("type", "directory");
+        s->settings.insert("type", "directory");
 
-    config.setValue("file", fileName->text());
-    config.setValue("directory", directoryName->text());
+    s->settings.insert("file", fileName->text());
+    s->settings.insert("directory", directoryName->text());
 }
 
 void ImageConfigWidget::restoreConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + ImageSource::instance->name());
-    fileName->setText(config.value("file").toString());
-    directoryName->setText(config.value("directory").toString());
-    auto type = config.value("type", "file").toString();
+    auto s = ImageSource::instance;
+    s->readSettings();
+    fileName->setText(s->settings.value("file").toString());
+    directoryName->setText(s->settings.value("directory").toString());
+    auto type = s->settings.value("type", "file").toString();
     if (type == "directory")
         directoryRadio->setChecked(true);
     else
         fileRadio->setChecked(true);
+}
+
+QString ImageSource::initialize(QString overrideInput)
+{
+    QStringList files;
+    bool isFile = "file" == settings.value("type", "file").toString();
+    if (isFile) {
+        if (!overrideInput.isEmpty()) {
+            return "Images can only be given as a directory when in batch mode.";
+        }
+        auto filename = settings.value("file").toString();
+        if (filename.isEmpty()) {
+            if (selectedFiles.size() > 0)
+                files = selectedFiles;
+        } else {
+            if (QFileInfo(filename).isReadable())
+                files = loadFilesFromIndex(filename);
+            else {
+                return "File error: selected file is not readable.";
+            }
+        }
+    } else {
+        auto dirname = settings.value("directory").toString();
+        if (QFileInfo(dirname).isDir())
+            files = loadFilesFromDirectory(dirname);
+        else {
+            return "Directory error: selected directory is not valid.";
+        }
+    }
+    if ((files.size() > 0) && queryFrameSize(files.first())) {
+        reader_.reset(new ImageReader(files));
+        return QString{};
+    }
+    return "No images to load.";
 }
 
 Q_EXPORT_PLUGIN2(Images, Images::ImageSource)

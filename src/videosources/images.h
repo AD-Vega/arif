@@ -45,13 +45,16 @@ public:
     SharedRawFrame createRawFrame();
     SharedDecoder createDecoder();
     Reader* reader();
+    QString settingsGroup();
+    QString initialize(QString overrideInput = QString{});
 
     static ImageSource* instance;
 
-private:
+public:
     QSize size;
     QScopedPointer<ImageReader> reader_;
     enum PixelFormat pixfmt;
+    QStringList selectedFiles;
 
     friend class ImageConfigWidget;
     friend class ImageFrame;
@@ -76,14 +79,8 @@ private slots:
   void restoreConfig();
 
 private:
-  QStringList loadFilesFromIndex(QString indexfile);
-  QStringList loadFilesFromDirectory(QString directory);
-  bool queryFrameSize(QString file);
-
-private:
   QRadioButton* fileRadio;
   QRadioButton* directoryRadio;
-  QStringList selectedFiles;
   QLineEdit* fileName;
   QLineEdit* directoryName;
 };
