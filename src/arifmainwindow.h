@@ -23,13 +23,15 @@
 #include "videosources/interfaces.h"
 #include "foreman.h"
 
-class ArifMainWindow : public QMainWindow, private Ui::arifMainWindow
+class ArifMainWindow : public QMainWindow, public Ui::arifMainWindow
 {
     Q_OBJECT
 
 public:
     explicit ArifMainWindow(VideoSourcePlugin* plugin,
                             QWidget* videoControls = 0,
+                            QString settingsFile = QString{},
+                            QString destinationDir = QString{},
                             QWidget* parent = 0,
                             Qt::WindowFlags flags = 0);
 
@@ -74,6 +76,7 @@ private:
     uint processedFrames = 0;
     uint missedFrames = 0;
     uint rejectedFrames = 0;
+    bool batchMode;
     QWidget* sourceControl;
 };
 

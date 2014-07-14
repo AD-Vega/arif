@@ -54,7 +54,7 @@ public:
     SharedDecoder createDecoder();
     Reader* reader();
     QString settingsGroup();
-    QString initialize();
+    QString initialize(QString overrideInput = QString{});
 
     static RawVideoSource* instance;
 

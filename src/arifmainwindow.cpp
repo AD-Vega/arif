@@ -32,7 +32,9 @@ Q_DECLARE_METATYPE(Presets)
 
 static uint fpsUpdateSec = 3;
 
-ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin, QWidget* videoControls, QWidget* parent, Qt::WindowFlags flags):
+ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin, QWidget* videoControls,
+                               QString settingsFile, QString destinationDir,
+                               QWidget* parent, Qt::WindowFlags flags):
     QMainWindow(parent, flags), sourceControl(videoControls)
 {
     settings.plugin = plugin;
@@ -61,7 +63,13 @@ ArifMainWindow::ArifMainWindow(VideoSourcePlugin* plugin, QWidget* videoControls
             qualityGraph, SLOT(setShortGraphMaxFrames(int)));
 
     // Restore settings and clear the FPS display, which is garbage at startup.
-    restoreProgramSettings();
+    if (!settingsFile.isEmpty())
+        restoreProgramSettings(settingsFile);
+    else
+        restoreProgramSettings();
+    if (!destinationDir.isEmpty())
+        imageDestinationDirectory->setText(destinationDir);
+    batchMode = !destinationDir.isEmpty();
     updateFps();
     sourceControlDock->setVisible((bool)sourceControl);
 
@@ -227,6 +235,8 @@ void ArifMainWindow::on_processButton_toggled(bool checked)
         // Reenable once foreman actually finishes.
         foreman->stop();
         qualityGraph->addLine();
+        if (batchMode)
+            close();
     }
     bool haveFile = !checked && !settings.plugin->reader()->isSequential();
     acceptanceEntireFileCheck->setEnabled(haveFile);
@@ -454,6 +464,9 @@ void ArifMainWindow::closeEvent(QCloseEvent* event)
 
 void ArifMainWindow::saveProgramSettings(QString filename)
 {
+    // Do not save settings in batch mode.
+    if (batchMode)
+        return;
     QScopedPointer<QSettings> config;
     if (filename.isEmpty())
         config.reset(new QSettings);

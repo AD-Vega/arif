@@ -21,6 +21,8 @@
 #include "arifmainwindow.h"
 #include "videosources/interfaces.h"
 #include "tclap/CmdLine.h"
+#include <QSettings>
+#include <QPluginLoader>
 #include <iostream>
 #include <string>
 
@@ -30,7 +32,7 @@ int main(int argc, char* argv[])
     QCoreApplication::setOrganizationDomain("ad-vega.si");
     QCoreApplication::setOrganizationName("AD Vega");
     QCoreApplication::setApplicationName("arif");
-    VideoSourcePlugin* plugin;
+    VideoSourcePlugin* plugin = nullptr;
     QWidget* control;
     QString settingsFile, videoFile, destinationDir;
 
@@ -72,20 +74,52 @@ int main(int argc, char* argv[])
     }
 
     if (!videoFile.isEmpty() && !destinationDir.isEmpty()) {
-        // TODO: handle file processing
+        // Handle file processing.
+        QScopedPointer<QSettings> config;
+        if (settingsFile.isEmpty())
+            config.reset(new QSettings);
+        else
+            config.reset(new QSettings(settingsFile, QSettings::IniFormat));
+        auto previousPluginName = config->value("settings/source").toString();
+        config.reset();
+        for (auto pluginPtr : QPluginLoader::staticInstances()) {
+            auto p = qobject_cast<VideoSourcePlugin*>(pluginPtr);
+            if (p != nullptr && p->name() == previousPluginName) {
+                plugin = p;
+                break;
+            }
+        }
+        if (!plugin) {
+            std::cerr << "Error: video input plugin not found!" << std::endl;
+            return 1;
+        }
+        plugin->readSettings(settingsFile);
+        auto init = plugin->initialize(videoFile);
+        if (!init.isEmpty()) {
+            std::cerr << (QString("Error: input initialization failed: ") + init).toStdString() << std::endl;
+            return 1;
+        }
+        if (plugin->reader()->isSequential()) {
+            std::cerr << "Error: only seekable videos are supported in batch mode!" << std::endl;
+            return 1;
+        }
+        ArifMainWindow w(plugin, nullptr, settingsFile, destinationDir);
+        a.processEvents();
+        w.acceptanceEntireFileCheck->setChecked(true);
+        a.processEvents();
+        w.processButton->setChecked(true);
+        return a.exec();
     } else if (videoFile.isEmpty() && destinationDir.isEmpty()) {
         // OK, show GUI and operate normally.
+        SourceSelectionWindow s;
+        s.exec();
+        plugin = s.result() == QDialog::Accepted ? s.selectedSource : nullptr;
+        control = s.sourceControl;
     } else {
         std::cerr << "Error: both input and output must be specified!" << std::endl;
         return 1;
     }
 
-    {
-        SourceSelectionWindow s;
-        s.exec();
-        plugin = s.result() == QDialog::Accepted ? s.selectedSource : nullptr;
-        control = s.sourceControl;
-    }
     if (plugin) {
         ArifMainWindow w(plugin, control);
         w.show();

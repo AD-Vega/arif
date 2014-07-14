@@ -142,7 +142,9 @@ public:
     // Once settings are loaded, this uses them to initialize
     // the plugin and make it usable. It returns an empty string
     // on success, or the error description on failure.
-    virtual QString initialize() { return QString{}; } // TODO: make pure virtual when everything is ported
+    // The optional argument allows the caller to specify where the
+    // video is to be read from, regardless of the settings.
+    virtual QString initialize(QString overrideInput = QString{}) { return QString{}; } // TODO: make pure virtual when everything is ported
 };
 
 Q_DECLARE_INTERFACE(VideoSourcePlugin,

@@ -433,9 +433,9 @@ QString RawVideoSource::settingsGroup()
     return "format_" + RawVideoSource::instance->name();
 }
 
-QString RawVideoSource::initialize()
+QString RawVideoSource::initialize(QString overrideInput)
 {
-    file = settings.value("file").toString();
+    file = overrideInput.isNull() ? settings.value("file").toString() : overrideInput;
     size = QSize(settings.value("width", 640).toInt(),
                  settings.value("height", 480).toInt());
     pixfmt = av_get_pix_fmt(settings.value("pixformat").toString().toAscii());
