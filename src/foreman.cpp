@@ -188,10 +188,10 @@ bool Foreman::haveIdleThreads()
      */
     auto p = QThreadPool::globalInstance();
     return p->activeThreadCount() < p->maxThreadCount() &&
-           runningJobs < 2 * p->maxThreadCount();
+           (int)runningJobs < 2 * p->maxThreadCount();
 }
 
-bool Foreman::requestAnotherFrame()
+void Foreman::requestAnotherFrame()
 {
     if (started && haveIdleThreads()) {
         emit ready();

@@ -96,7 +96,7 @@ VideoSourcePlugin* ImageReader::plugin()
 
 void ImageReader::readFrame()
 {
-    if (current >= filenames.size()) {
+    if (current >= (quint64)(filenames.size())) {
         emit atEnd();
     } else {
         auto F = ImageSource::instance->createRawFrame();

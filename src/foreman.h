@@ -100,7 +100,7 @@ signals:
 
 private:
     bool haveIdleThreads();
-    bool requestAnotherFrame();
+    void requestAnotherFrame();
     static FlushReturn flush(QList<QueuedImage> queue, int acceptance);
 
 private:
