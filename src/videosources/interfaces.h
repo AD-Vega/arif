@@ -24,6 +24,8 @@
 #include <QSharedPointer>
 #include <QDateTime>
 #include <QGroupBox>
+#include <QMap>
+#include <QVariant>
 #include <opencv2/core/core.hpp>
 
 class VideoSourcePlugin;
@@ -120,6 +122,27 @@ public:
     virtual SharedRawFrame createRawFrame() = 0;
     virtual SharedDecoder createDecoder() = 0;
     virtual Reader* reader() = 0;
+
+    // These two functions simply dump/load the QSettings
+    // to/from the settings member. If the file is given,
+    // the settings are stored there forcing the INI format.
+    // The VideoSourceConfigurationWidget will automatically
+    // use these two, but they can be used to get configuration
+    // without having a GUI.
+    void readSettings(QString file = QString{});
+    void saveSettings(QString file = QString{});
+
+    // This function names the settings group for the plugin.
+    virtual QString settingsGroup() { return QString{}; } // TODO: make pure virtual when everything is ported
+
+    // Settings values for the plugin, filled either by
+    // readSettings() or VideoSourceConfigurationWidget.
+    QMap<QString, QVariant> settings;
+
+    // Once settings are loaded, this uses them to initialize
+    // the plugin and make it usable. It returns an empty string
+    // on success, or the error description on failure.
+    virtual QString initialize() { return QString{}; } // TODO: make pure virtual when everything is ported
 };
 
 Q_DECLARE_INTERFACE(VideoSourcePlugin,

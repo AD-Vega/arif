@@ -225,7 +225,6 @@ void RawVideoReader::setupAsio(int fd)
 {
     RawVideoSource* s = RawVideoSource::instance;
     currentlyReadFrame = s->createRawFrame();
-    RawVideoFrame* f = static_cast<RawVideoFrame*>(currentlyReadFrame.data());
     auto frame = currentlyReadFrame;
     asyncHandler = [this, frame]
                    (const boost::system::error_code & err,
@@ -340,49 +339,18 @@ void RawSourceConfigWidget::checkFilename(QString name)
 
 void RawSourceConfigWidget::checkConfig()
 {
-    auto name = fileName->text();
-    if (name.startsWith('<') ||
-        name.startsWith('>') ||
-        name.startsWith('|')) {
-        // Process
-        auto command = name.toLocal8Bit().data();
-        std::FILE* process = popen(++command, "r");
-        if (!process) {
-            QMessageBox tmp;
-            tmp.setWindowTitle("Process error");
-            tmp.setText("Could not launch specified command.");
-            tmp.exec();
-            return;
-        }
-
-        RawVideoSource* s = RawVideoSource::instance;
-        s->file = name;
-        s->size = QSize(width->value(), height->value());
-        s->pixfmt = av_get_pix_fmt(formatSelector->currentText().toAscii());
-        s->headerBytes = header->value();
-        s->frameBytes = avpicture_get_size(s->pixfmt,
-                                           s->size.width(),
-                                           s->size.height());
-        s->reader_.reset(new RawVideoReader(process, liveCheckBox->isChecked()));
-        saveConfig();
-        emit configurationComplete();
-    } else if (QFileInfo(name).isReadable()) {
-        RawVideoSource* s = RawVideoSource::instance;
-        s->file = name;
-        s->size = QSize(width->value(), height->value());
-        s->pixfmt = av_get_pix_fmt(formatSelector->currentText().toAscii());
-        s->headerBytes = header->value();
-        s->frameBytes = avpicture_get_size(s->pixfmt,
-                                           s->size.width(),
-                                           s->size.height());
-        s->reader_.reset(new RawVideoReader(name, liveCheckBox->isChecked()));
-        saveConfig();
+    RawVideoSource* s = RawVideoSource::instance;
+    saveConfig();
+    auto result = s->initialize();
+    if (s->initialize().isNull()) {
+        s->saveSettings();
         emit configurationComplete();
     } else {
         QMessageBox tmp;
-        tmp.setWindowTitle("File error");
-        tmp.setText("Selected file is not readable.");
+        tmp.setWindowTitle("Error");
+        tmp.setText(result);
         tmp.exec();
+        return;
     }
 }
 
@@ -397,27 +365,26 @@ void RawSourceConfigWidget::getFile()
 
 void RawSourceConfigWidget::saveConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + RawVideoSource::instance->name());
-    config.setValue("file", fileName->text());
-    config.setValue("pixformat", formatSelector->currentText());
-    config.setValue("header_bytes", header->value());
-    config.setValue("width", width->value());
-    config.setValue("height", height->value());
-    config.setValue("live", liveCheckBox->isChecked());
+    auto s = RawVideoSource::instance;
+    s->settings.insert("file", fileName->text());
+    s->settings.insert("pixformat", formatSelector->currentText());
+    s->settings.insert("header_bytes", header->value());
+    s->settings.insert("width", width->value());
+    s->settings.insert("height", height->value());
+    s->settings.insert("live", liveCheckBox->isChecked());
 }
 
 void RawSourceConfigWidget::restoreConfig()
 {
-    QSettings config;
-    config.beginGroup("format_" + RawVideoSource::instance->name());
-    fileName->setText(config.value("file").toString());
-    int idx = formatSelector->findText(config.value("pixformat").toString());
+    auto s = RawVideoSource::instance;
+    s->readSettings();
+    fileName->setText(s->settings.value("file").toString());
+    int idx = formatSelector->findText(s->settings.value("pixformat").toString());
     formatSelector->setCurrentIndex(idx);
-    header->setValue(config.value("header_bytes").toInt());
-    width->setValue(config.value("width", 640).toInt());
-    height->setValue(config.value("height", 480).toInt());
-    liveCheckBox->setChecked(config.value("live", false).toBool());
+    header->setValue(s->settings.value("header_bytes").toInt());
+    width->setValue(s->settings.value("width", 640).toInt());
+    height->setValue(s->settings.value("height", 480).toInt());
+    liveCheckBox->setChecked(s->settings.value("live", false).toBool());
 }
 
 QString RawVideoSource::name()
@@ -460,6 +427,44 @@ Reader* RawVideoSource::reader()
 {
     return reader_.data();
 }
+
+QString RawVideoSource::settingsGroup()
+{
+    return "format_" + RawVideoSource::instance->name();
+}
+
+QString RawVideoSource::initialize()
+{
+    file = settings.value("file").toString();
+    size = QSize(settings.value("width", 640).toInt(),
+                 settings.value("height", 480).toInt());
+    pixfmt = av_get_pix_fmt(settings.value("pixformat").toString().toAscii());
+    headerBytes = settings.value("header_bytes").toInt();
+    frameBytes = avpicture_get_size(pixfmt,
+                                    size.width(),
+                                    size.height());
+    bool isLive = settings.value("live", false).toBool();
+
+    auto& name = file;
+    if (name.startsWith('<') ||
+        name.startsWith('>') ||
+        name.startsWith('|')) {
+        // Process
+        auto command = name.toLocal8Bit().data();
+        std::FILE* process = popen(++command, "r");
+        if (!process) {
+            return "Process error: Could not launch specified command.";
+        }
+        reader_.reset(new RawVideoReader(process, isLive));
+        return QString {};
+    } else if (QFileInfo(name).isReadable()) {
+        reader_.reset(new RawVideoReader(name, isLive));
+        return QString {};
+    } else {
+        return "File error: Selected file is not readable.";
+    }
+}
+
 
 Q_EXPORT_PLUGIN2(RawVideo, RawVideo::RawVideoSource)
 Q_IMPORT_PLUGIN(RawVideo)

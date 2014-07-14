@@ -17,6 +17,7 @@
  */
 
 #include "videosources/interfaces.h"
+#include <QSettings>
 
 void FrameMetaData::serialize(QDataStream& s)
 {
@@ -54,9 +55,35 @@ FrameMetaData Reader::makeMetaData()
     return metadata;
 }
 
+void VideoSourcePlugin::readSettings(QString file)
+{
+    QScopedPointer<QSettings> config;
+    if (file.isEmpty())
+        config.reset(new QSettings);
+    else
+        config.reset(new QSettings(file, QSettings::IniFormat));
+    config->beginGroup(settingsGroup());
+    for (auto& k: config->allKeys())
+        settings.insert(k, config->value(k));
+}
+
+void VideoSourcePlugin::saveSettings(QString file)
+{
+    QScopedPointer<QSettings> config;
+    if (file.isEmpty())
+        config.reset(new QSettings);
+    else
+        config.reset(new QSettings(file, QSettings::IniFormat));
+    config->beginGroup(settingsGroup());
+    for (auto i = settings.constBegin(), end = settings.constEnd();
+         i != end; ++i)
+         config->setValue(i.key(), i.value());
+}
+
 static int registerTypes()
 {
     qRegisterMetaType<SharedRawFrame>("SharedRawFrame");
+    return 0;
 }
 
 static int __register = registerTypes();
