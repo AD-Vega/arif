@@ -199,7 +199,7 @@ void QualityHistogram::clear()
 
 void QualityHistogram::draw()
 {
-    if (counter > n) {
+    if (counter > (decltype(counter))n) {
         auto histogram = boost::accumulators::density(accumulator);
         if (samplingLabel) {
             removeItem(samplingLabel);
