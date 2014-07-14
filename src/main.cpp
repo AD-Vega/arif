@@ -35,6 +35,7 @@ int main(int argc, char* argv[])
     VideoSourcePlugin* plugin = nullptr;
     QWidget* control;
     QString settingsFile, videoFile, destinationDir;
+    bool showGUI;
 
     try {
         const char description[] =
@@ -62,11 +63,14 @@ int main(int argc, char* argv[])
         TCLAP::ValueArg<std::string>
         outputArg("o", "output", "Output directory for processed images",
                   false, std::string{}, "directory", cmd);
+        TCLAP::SwitchArg
+        guiArg("g", "gui", "Show GUI even when batch processing", cmd);
 
         cmd.parse(argc, argv);
         settingsFile = QString::fromStdString(settingsArg.getValue());
         videoFile = QString::fromStdString(inputArg.getValue());
         destinationDir = QString::fromStdString(outputArg.getValue());
+        showGUI = guiArg.getValue();
     } catch (TCLAP::ArgException &e) {
         std::cerr << "Error processing argument " << e.argId() << std::endl
                   << e.error() << std::endl;
@@ -104,6 +108,8 @@ int main(int argc, char* argv[])
             return 1;
         }
         ArifMainWindow w(plugin, nullptr, settingsFile, destinationDir);
+        if (showGUI)
+            w.show();
         a.processEvents();
         w.acceptanceEntireFileCheck->setChecked(true);
         a.processEvents();
