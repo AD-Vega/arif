@@ -132,7 +132,6 @@ void ArifMainWindow::initialize()
         seekSlider->setVisible(false);
     }
 
-    printActiveThreads();
     auto fpsTimer = new QTimer(this);
     connect(fpsTimer, SIGNAL(timeout()), SLOT(updateFps()));
     fpsTimer->start(1000 * fpsUpdateSec);
@@ -404,12 +403,6 @@ void ArifMainWindow::incrementSlider()
     seekSlider->blockSignals(true);
     seekSlider->setValue(seekSlider->value() + 1);
     seekSlider->blockSignals(false);
-}
-
-void ArifMainWindow::printActiveThreads()
-{
-    qDebug() << "Active threads:" << QThreadPool::globalInstance()->activeThreadCount();
-    QTimer::singleShot(3000, this, SLOT(printActiveThreads()));
 }
 
 void ArifMainWindow::imageRegionSelected(QRect region)

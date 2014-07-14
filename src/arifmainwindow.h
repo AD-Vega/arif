@@ -45,7 +45,6 @@ private slots:
     void readerFinished();
     void updateSettings();
     void incrementSlider();
-    void printActiveThreads();
     void imageRegionSelected(QRect region);
     void getFrameToRender();
 
