@@ -20,7 +20,7 @@
 #include "sourceselectionwindow.h"
 #include "arifmainwindow.h"
 #include "videosources/interfaces.h"
-#include "tclap/CmdLine.h"
+#include <tclap/CmdLine.h>
 #include <QSettings>
 #include <QPluginLoader>
 #include <iostream>
