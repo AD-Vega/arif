@@ -4,12 +4,12 @@ arif - ADV Realtime Image Filtering
 arif is a software package for estimating the quality of images in a
 video stream, be it a pre-recorded video or a live capture. It is
 meant to facilitate the lucky imaging technique in amateur
-astronomy. Quality is estimated using a wavelet decomposition
-technique, similar to the well-known unsharp mask filter. Using heavy
-multithreading, it will keep your processors busy, hopefully keeping
-up with a live video stream. It is coupled to QArv, another software
-package from the same authors which allows video capture from ethernet
-cameras.
+astronomy. Quality is estimated using a decomposition technique called
+"gaussian wavelets", similar to the well-known unsharp mask
+filter. Using heavy multithreading, it will keep your processors busy,
+hopefully keeping up with a live video stream. It is coupled to QArv,
+another software package from the same authors which allows video
+capture from ethernet cameras.
 
 arif can:
      * read your video and decompose it into images for further
