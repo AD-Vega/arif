@@ -13,7 +13,7 @@ endmacro(set_prefixed)
 
 find_path(QWT_INCLUDE qwt_plot.h PATH_SUFFIXES qwt6 qwt)
 find_package(OpenCV REQUIRED)
-pkg_check_modules(PKGCONFS REQUIRED qarv-1 libswscale libavcodec libavutil tclap)
+pkg_check_modules(PKGCONFS REQUIRED qarv-2 libswscale libavcodec libavutil tclap)
 find_library(QWT_LIB NAMES qwt6 qwt)
 find_package(Boost COMPONENTS system REQUIRED)
 

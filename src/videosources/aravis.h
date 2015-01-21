@@ -118,7 +118,7 @@ public slots:
     void readFrame();
 
 private slots:
-    void getFrame();
+    void getFrame(QByteArray frame);
 
 private:
     QArvCamera* camera;

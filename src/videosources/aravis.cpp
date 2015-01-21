@@ -90,10 +90,10 @@ bool AravisReader::seek(qint64 frame)
     return false;
 }
 
-void AravisReader::getFrame()
+void AravisReader::getFrame(QByteArray frame)
 {
     auto f = new AravisFrame;
-    f->frame = camera->getFrame(true, true);
+    f->frame = frame;
     f->metaData = makeMetaData();
     emit frameReady(SharedRawFrame(f));
 }
@@ -165,12 +165,13 @@ void AravisSourceConfigWidget::finish()
 {
     auto s = AravisSource::instance;
     auto c = gui->camera();
-    s->size = c->getFrameSize();
+    s->size = c->getROI().size();
     s->pixfmt = c->getPixelFormatId();
     disconnect(gui, SIGNAL(recordingToggled(bool)), this, SLOT(finish()));
     gui->forceRecording();
     s->reader_->camera = c;
-    connect(c, SIGNAL(frameReady()), s->reader_.data(), SLOT(getFrame()));
+    connect(c, SIGNAL(frameReady(QByteArray, ArvBuffer*)),
+            s->reader_.data(), SLOT(getFrame(QByteArray)));
     gui->setParent(0);
     emit configurationComplete(gui);
 }
