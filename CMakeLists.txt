@@ -11,10 +11,8 @@ macro(set_prefixed varname string)
   endforeach(name)
 endmacro(set_prefixed)
 
-find_path(QWT_INCLUDE qwt_plot.h PATH_SUFFIXES qwt6 qwt)
 find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-2 libswscale libavcodec libavutil tclap)
-find_library(QWT_LIB NAMES qwt6 qwt)
 find_package(Boost COMPONENTS system REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
@@ -23,7 +21,7 @@ set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
 
 include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
-  ${CMAKE_CURRENT_SOURCE_DIR}/src ${QWT_INCLUDE})
+  ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set_prefixed(arif_videosources_SRC videosources/
   interfaces.cpp
@@ -77,8 +75,11 @@ target_link_libraries(arif
   ${QT_LIBRARIES}
   ${SWSCALE_LIB}
   ${QARV_LIB}
-  ${QWT_LIB}
   ${PKGCONFS_LDFLAGS}
   ${OpenCV_LIBS}
   ${Boost_LIBRARIES}
 )
+
+install(TARGETS arif
+  RUNTIME DESTINATION bin/
+  LIBRARY DESTINATION lib/)
