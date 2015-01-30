@@ -85,3 +85,8 @@ target_link_libraries(arif
 install(TARGETS arif
   RUNTIME DESTINATION bin/
   LIBRARY DESTINATION lib/)
+install(FILES res/arif.desktop
+  DESTINATION share/applications/)
+install(FILES res/icons/arif.svgz
+  RENAME application-x-arif.svgz
+  DESTINATION share/icons/)

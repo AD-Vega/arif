@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Name=arif
+Icon=application-x-arif
+TryExec=arif
+Exec=arif
+Terminal=false
+Categories=Science;Astronomy;ImageProcessing;Qt
+Comment=Quality filtering for lucky imaging
+GenericName=Image processing
