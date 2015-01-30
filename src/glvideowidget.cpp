@@ -26,7 +26,7 @@ GLVideoWidget::GLVideoWidget(QWidget* parent) :
                         QGL::SampleBuffers |
                         QGL::Rgba),
               parent),
-    idleImageRenderer(QString("/usr/share/qarv/1/video-display.svgz")),
+    idleImageRenderer(QString("/usr/share/qarv/2/video-display.svgz")),
     idling(true), selecting(false),
     drawRectangle(false), fixedSelection(false), corner1(), corner2(),
     rectangle(), whitepen(Qt::white), blackpen(Qt::black)

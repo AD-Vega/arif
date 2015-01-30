@@ -26,6 +26,7 @@
 SourceSelectionWindow::SourceSelectionWindow(QWidget* parent, Qt::WindowFlags f):
     QDialog(parent, f)
 {
+    setWindowIcon(QIcon(":/icons/arif.svg"));
     setLayout(new QVBoxLayout);
     selector = new QComboBox;
     layout()->addWidget(selector);

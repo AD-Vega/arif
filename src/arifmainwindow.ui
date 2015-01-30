@@ -13,6 +13,10 @@
   <property name="windowTitle">
    <string>Arif</string>
   </property>
+  <property name="windowIcon">
+   <iconset resource="../res/icons/icons.qrc">
+    <normaloff>:/icons/arif.svg</normaloff>:/icons/arif.svg</iconset>
+  </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout_4">
     <item>
@@ -756,7 +760,9 @@
   <tabstop>processButton</tabstop>
   <tabstop>seekSlider</tabstop>
  </tabstops>
- <resources/>
+ <resources>
+  <include location="../res/icons/icons.qrc"/>
+ </resources>
  <connections/>
  <slots>
   <slot>workerConfigurationComplete()</slot>

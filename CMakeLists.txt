@@ -66,10 +66,12 @@ qt4_wrap_ui(arif_UI
 qt4_wrap_cpp(arif_MOC_MOCD
   ${arif_MOC}
 )
+qt4_add_resources(arif_QRC res/icons/icons.qrc)
 add_executable(arif
   ${arif_SRC}
   ${arif_MOC_MOCD}
   ${arif_UI}
+  ${arif_QRC}
 )
 target_link_libraries(arif
   ${QT_LIBRARIES}

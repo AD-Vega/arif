@@ -1,0 +1,5 @@
+<RCC>
+  <qresource prefix="icons">
+    <file>arif.svg</file>
+  </qresource>
+</RCC>
