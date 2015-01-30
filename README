@@ -34,7 +34,7 @@ Requirements and installation
 =============================
 
 arif requires QArv and its dependencies (Qt, OpenCV etc.). In
-addition, it requires the tclap, qwt and boost libraries.
+addition, it requires the tclap and boost libraries.
 
 arif is built using CMake. If you are not familiar with CMake, refer
 to any tutorial. But for starters, run these commands from the arif
@@ -57,5 +57,5 @@ Licensing information
 arif is provided under the GNU General Public License, version 3 or
 later. See COPYING for more information.
 
-Copyright 2014 Jure Varlec <jure.varlec@ad-vega.si>
+Copyright 2015 Jure Varlec <jure.varlec@ad-vega.si>
                Andrej Lajovic <andrej.lajovic@ad-vega.si>
