@@ -21,6 +21,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <QFont>
 #include <QFontMetrics>
+#include <QFile>
+#include <vector>
 #include <cstdint>
 
 static int registerTypes()
@@ -348,5 +350,15 @@ void SaveStage(SharedData d)
 
 bool saveImage(const cv::Mat& image, QString filename)
 {
-    return cv::imwrite((filename + ".tiff").toStdString(), image);
+    std::vector<uchar> data;
+    bool success = cv::imencode(".tiff", image, data);
+    if (success) {
+        QFile file(filename + ".tiff");
+        success = file.open(QIODevice::WriteOnly);
+        if (success) {
+            const char* dptr = reinterpret_cast<char*>(data.data());
+            success = (qint64)data.size() == file.write(dptr, data.size());
+        }
+    }
+    return success;
 }
