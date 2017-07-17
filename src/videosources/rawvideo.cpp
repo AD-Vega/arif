@@ -274,10 +274,10 @@ void RawVideoReader::asioRead()
 static void populateFormatSelector(QComboBox* sel)
 {
     QStringList formats;
-    //TODO don't use PIX_FMT_NB once libav is updated
-    for (int i = 0; i < PIX_FMT_NB; i++) {
-        if (sws_isSupportedInput((PixelFormat)i))
-            formats.append(av_get_pix_fmt_name((PixelFormat)i));
+    //TODO don't use AV_PIX_FMT_NB once libav is updated
+    for (int i = 0; i < AV_PIX_FMT_NB; i++) {
+        if (sws_isSupportedInput((AVPixelFormat)i))
+            formats.append(av_get_pix_fmt_name((AVPixelFormat)i));
     }
     formats.sort();
     sel->clear();

@@ -53,7 +53,7 @@ public:
 public:
     QSize size;
     QScopedPointer<ImageReader> reader_;
-    enum PixelFormat pixfmt;
+    enum AVPixelFormat pixfmt;
     QStringList selectedFiles;
 
     friend class ImageConfigWidget;

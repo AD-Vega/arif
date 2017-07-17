@@ -64,7 +64,7 @@ private:
     QSize size;
     QString file;
     QScopedPointer<RawVideoReader> reader_;
-    enum PixelFormat pixfmt;
+    enum AVPixelFormat pixfmt;
     uint headerBytes;
     int frameBytes;
     QList<QByteArray> framePool;
