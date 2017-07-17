@@ -19,6 +19,7 @@
 #ifndef PLOTWIDGETS_H
 #define PLOTWIDGETS_H
 
+#include <gio/gio.h>  // Workaround for gdbusintrospection's use of "signal".
 #include "qcustomplot.h"
 #include "processing.h"
 #include <boost/accumulators/statistics/density.hpp>

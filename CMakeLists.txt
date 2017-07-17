@@ -13,6 +13,7 @@ endmacro(set_prefixed)
 
 find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-2 libswscale libavcodec libavutil tclap)
+pkg_check_modules(GIO REQUIRED gio-2.0)
 find_package(Boost COMPONENTS system REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
@@ -20,7 +21,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall ${PKGCONFS_CFLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
 
-include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR}
+include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${GIO_INCLUDE_DIRS}
   ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set_prefixed(arif_videosources_SRC videosources/

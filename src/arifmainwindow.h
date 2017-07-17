@@ -19,8 +19,8 @@
 #ifndef ARIFMAINWINDOW_H
 #define ARIFMAINWINDOW_H
 
-#include "ui_arifmainwindow.h"
 #include "videosources/interfaces.h"
+#include "ui_arifmainwindow.h"
 #include "foreman.h"
 
 class ArifMainWindow : public QMainWindow, public Ui::arifMainWindow

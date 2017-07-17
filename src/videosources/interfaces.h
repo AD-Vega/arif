@@ -19,6 +19,7 @@
 #ifndef VIDEOSOURCES_INTERFACES_H
 #define VIDEOSOURCES_INTERFACES_H
 
+#include <gio/gio.h>  // Workaround for gdbusintrospection's use of "signal".
 #include <QtPlugin>
 #include <QMetaType>
 #include <QSharedPointer>
