@@ -17,7 +17,7 @@
  */
 
 #include <gio/gio.h>  // Workaround for gdbusintrospection's use of "signal".
-#include <QtGui/QApplication>
+#include <QApplication>
 #include "sourceselectionwindow.h"
 #include "arifmainwindow.h"
 #include "videosources/interfaces.h"
