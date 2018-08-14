@@ -24,9 +24,9 @@ arif can:
      * export processing settings, facilitating batch processing of
        similar video streams without needing a graphical interface.
 
-Homepage: https://gitorious.org/adv/arif/
+Homepage: https://github.com/AD-Vega/arif/
 
-See also: https://gitorious.org/adv/lycklig/
+See also: https://github.com/AD-Vega/lycklig/
           lycklig implements further processing stages for lucky imaging.
 
 
