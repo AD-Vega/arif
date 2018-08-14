@@ -176,5 +176,4 @@ void AravisSourceConfigWidget::finish()
     emit configurationComplete(gui);
 }
 
-Q_EXPORT_PLUGIN2(Aravis, Aravis::AravisSource)
 Q_IMPORT_PLUGIN(Aravis)

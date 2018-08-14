@@ -36,6 +36,7 @@ class AravisSource: public QObject, public VideoSourcePlugin
 {
     Q_OBJECT
     Q_INTERFACES(VideoSourcePlugin)
+    Q_PLUGIN_METADATA(IID "si.ad-vega.arif.AravisSource")
 
 public:
     explicit AravisSource(QObject* parent = 0);

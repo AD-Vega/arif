@@ -266,5 +266,4 @@ QString QArvVideoSource::initialize(QString overrideInput)
     return "Error opening video.";
 }
 
-Q_EXPORT_PLUGIN2(QArvVideo, QArvVideo::QArvVideoSource)
 Q_IMPORT_PLUGIN(QArvVideo)

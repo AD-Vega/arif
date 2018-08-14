@@ -36,6 +36,7 @@ class ImageSource: public QObject, public VideoSourcePlugin
 {
     Q_OBJECT
     Q_INTERFACES(VideoSourcePlugin)
+    Q_PLUGIN_METADATA(IID "si.ad-vega.arif.ImageSource")
 
 public:
     explicit ImageSource(QObject* parent = 0);

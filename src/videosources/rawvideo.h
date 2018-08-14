@@ -44,6 +44,7 @@ class RawVideoSource: public QObject, public VideoSourcePlugin
 {
     Q_OBJECT
     Q_INTERFACES(VideoSourcePlugin)
+    Q_PLUGIN_METADATA(IID "si.ad-vega.arif.RawVideoSource")
 
 public:
     explicit RawVideoSource(QObject* parent = 0);
