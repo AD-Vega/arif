@@ -438,7 +438,7 @@ QString RawVideoSource::initialize(QString overrideInput)
     file = overrideInput.isNull() ? settings.value("file").toString() : overrideInput;
     size = QSize(settings.value("width", 640).toInt(),
                  settings.value("height", 480).toInt());
-    pixfmt = av_get_pix_fmt(settings.value("pixformat").toString().toAscii());
+    pixfmt = av_get_pix_fmt(settings.value("pixformat").toString().toLatin1());
     headerBytes = settings.value("header_bytes").toInt();
     frameBytes = avpicture_get_size(pixfmt,
                                     size.width(),
