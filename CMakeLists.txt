@@ -14,8 +14,8 @@ endmacro(set_prefixed)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 find_package(Qt5 REQUIRED COMPONENTS
-             Core Gui Widgets OpenGL Network Svg Concurrent LinguistTools)
-set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Network Qt5::Svg Qt5::Concurrent)
+             Core Gui Widgets OpenGL Network Svg Concurrent PrintSupport LinguistTools)
+set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Network Qt5::Svg Qt5::Concurrent Qt5::PrintSupport)
 
 find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-3 libswscale libavcodec libavutil tclap)

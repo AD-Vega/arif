@@ -20,13 +20,17 @@
 #define PLOTWIDGETS_H
 
 #include <gio/gio.h>  // Workaround for gdbusintrospection's use of "signal".
-#include "qcustomplot.h"
 #include "processing.h"
 #include <boost/accumulators/statistics/density.hpp>
 #include <boost/accumulators/statistics/rolling_mean.hpp>
 #include <boost/accumulators/accumulators.hpp>
 
-class QualityGraph: public QCustomPlot
+class QCustomPlot;
+class QCPGraph;
+class QCPBars;
+class QCPItemText;
+
+class QualityGraph: public QWidget
 {
     Q_OBJECT
 
@@ -44,6 +48,7 @@ private:
     void showSamplingText();
 
 private:
+    QCustomPlot* qcp;
     QCPGraph* longGraph;
     QCPGraph* shortGraph;
     QCPItemText* samplingLabel;
@@ -54,7 +59,7 @@ private:
           longGraphMean;
 };
 
-class QualityHistogram: public QCustomPlot
+class QualityHistogram: public QWidget
 {
     Q_OBJECT
 
@@ -70,6 +75,7 @@ private:
     void showSamplingText();
 
 private:
+    QCustomPlot* qcp;
     QCPBars* graph;
     QCPItemText* samplingLabel;
     uint shortLength = 100;
@@ -79,7 +85,7 @@ private:
     unsigned long long counter = 0;
 };
 
-class ImageHistogram: public QCustomPlot
+class ImageHistogram: public QWidget
 {
     Q_OBJECT
 
@@ -89,6 +95,7 @@ public:
                           bool grayscale);
 
 private:
+    QCustomPlot* qcp;
     QCPBars* red, *green, *blue;
     bool gray = false;
 };

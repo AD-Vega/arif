@@ -17,6 +17,7 @@
  */
 
 #include "plotwidgets.h"
+#include "qcustomplot.h"
 #include <QStyleOption>
 #include <QDebug>
 
@@ -46,51 +47,58 @@ static QCPItemText* createSamplingLabel(QCustomPlot* parent)
 }
 
 QualityGraph::QualityGraph(QWidget* parent):
-    QCustomPlot(parent),
+    QWidget(parent),
     longGraphMean(boost::accumulators::tag::rolling_window::window_size = n)
 {
+    qcp = new QCustomPlot(this);
+    auto lay = new QHBoxLayout;
+    setContentsMargins(0, 0, 0, 0);
+    setLayout(lay);
+    lay->setContentsMargins(0, 0, 0, 0);
+    lay->addWidget(qcp);
+
     QStyleOption style;
-    shortGraph = addGraph(xAxis2, yAxis);
-    longGraph = addGraph(xAxis, yAxis);
+    shortGraph = qcp->addGraph(qcp->xAxis2, qcp->yAxis);
+    longGraph = qcp->addGraph(qcp->xAxis, qcp->yAxis);
 
-    xAxis->setLabel("Frame number (all frames)");
-    xAxis->setLabelColor(color1);
-    xAxis->setTickLabelColor(color1);
-    xAxis->setTickPen(QPen(color1));
-    xAxis->setBasePen(QPen(color1));
+    qcp->xAxis->setLabel("Frame number (all frames)");
+    qcp->xAxis->setLabelColor(color1);
+    qcp->xAxis->setTickLabelColor(color1);
+    qcp->xAxis->setTickPen(QPen(color1));
+    qcp->xAxis->setBasePen(QPen(color1));
 
-    xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
-    xAxis2->setVisible(true);
-    xAxis2->setTickPen(QPen(color2));
-    xAxis2->setLabelColor(color2);
-    xAxis2->setTickLabelColor(color2);
-    xAxis2->setTickPen(QPen(color2));
-    xAxis2->setBasePen(QPen(color2));
+    qcp->xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
+    qcp->xAxis2->setVisible(true);
+    qcp->xAxis2->setTickPen(QPen(color2));
+    qcp->xAxis2->setLabelColor(color2);
+    qcp->xAxis2->setTickLabelColor(color2);
+    qcp->xAxis2->setTickPen(QPen(color2));
+    qcp->xAxis2->setBasePen(QPen(color2));
 
-    yAxis->setLabel("Quality");
-    yAxis->setLabelColor(style.palette.color(QPalette::Text));
-    yAxis->setTickLabelColor(style.palette.color(QPalette::Text));
-    yAxis->setTickPen(style.palette.color(QPalette::Text));
-    yAxis->setBasePen(style.palette.color(QPalette::Text));
+    qcp->yAxis->setLabel("Quality");
+    qcp->yAxis->setLabelColor(style.palette.color(QPalette::Text));
+    qcp->yAxis->setTickLabelColor(style.palette.color(QPalette::Text));
+    qcp->yAxis->setTickPen(style.palette.color(QPalette::Text));
+    qcp->yAxis->setBasePen(style.palette.color(QPalette::Text));
 
     longGraph->setPen(QPen(color1));
     shortGraph->setPen(QPen(color2));
-    setBackground(style.palette.background());
+    qcp->setBackground(style.palette.background());
 
     showSamplingText();
 
-    setNotAntialiasedElements(QCP::aeAll);
-    setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
+    qcp->setNotAntialiasedElements(QCP::aeAll);
+    qcp->setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
 }
 
 void QualityGraph::setShortGraphMaxFrames(int frames)
 {
     shortLength = frames;
     if (shortGraph->data()->size() > shortLength) {
-        shortGraph->removeDataBefore(counter - shortLength);
+        shortGraph->data()->removeBefore(counter - shortLength);
     }
-    xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
-    replot();
+    qcp->xAxis2->setLabel(QString("Frame number (last %1 frames)").arg(shortLength));
+    qcp->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void QualityGraph::addFrameStats(SharedData data)
@@ -103,7 +111,7 @@ void QualityGraph::addFrameStats(SharedData data)
                            boost::accumulators::rolling_mean(longGraphMean));
         shortGraph->addData(counter, data->quality);
         if (shortGraph->data()->size() > shortLength) {
-            shortGraph->removeDataBefore(counter - shortLength);
+            shortGraph->data()->removeBefore(counter - shortLength);
         }
     }
 }
@@ -112,70 +120,74 @@ void QualityGraph::addLine()
 {
     QPen pen(Qt::DashLine);
     pen.setColor(color1);
-    auto line = new QCPItemStraightLine(this);
+    auto line = new QCPItemStraightLine(qcp);
     line->setPen(pen);
     line->point1->setCoords(counter, 0);
     line->point2->setCoords(counter, 1);
-    addItem(line);
 }
 
 void QualityGraph::clear()
 {
     counter = 0;
-    longGraph->clearData();
-    clearItems();
-    shortGraph->clearData();
+    longGraph->data()->clear();
+    qcp->clearItems();
+    shortGraph->data()->clear();
     showSamplingText();
-    replot();
+    qcp->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void QualityGraph::draw()
 {
     if (samplingLabel) {
-        removeItem(samplingLabel);
+        qcp->removeItem(samplingLabel);
         samplingLabel = nullptr;
     }
-    rescaleAxes();
-    replot();
+    qcp->rescaleAxes();
+    qcp->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void QualityGraph::showSamplingText()
 {
-    samplingLabel = createSamplingLabel(this);
-    addItem(samplingLabel);
+    samplingLabel = createSamplingLabel(qcp);
 }
 
 QualityHistogram::QualityHistogram(QWidget* parent):
-    QCustomPlot(parent),
+    QWidget(parent),
     accumulator(boost::accumulators::tag::density::cache_size = n,
                 boost::accumulators::tag::density::num_bins = N)
 {
+    qcp = new QCustomPlot(this);
+    auto lay = new QHBoxLayout;
+    setContentsMargins(0, 0, 0, 0);
+    setLayout(lay);
+    lay->setContentsMargins(0, 0, 0, 0);
+    lay->addWidget(qcp);
+
     QStyleOption style;
-    graph = new QCPBars(xAxis, yAxis);
-    addPlottable(graph);
+    graph = new QCPBars(qcp->xAxis, qcp->yAxis);
 
-    xAxis->setLabel("Quality of frames");
-    xAxis->setLabelColor(style.palette.color(QPalette::Text));
-    xAxis->setTickLabelColor(style.palette.color(QPalette::Text));
-    xAxis->setTickPen(QPen(style.palette.color(QPalette::Text)));
-    xAxis->setBasePen(QPen(style.palette.color(QPalette::Text)));
+    qcp->xAxis->setLabel("Quality of frames");
+    qcp->xAxis->setLabelColor(style.palette.color(QPalette::Text));
+    qcp->xAxis->setTickLabelColor(style.palette.color(QPalette::Text));
+    qcp->xAxis->setTickPen(QPen(style.palette.color(QPalette::Text)));
+    qcp->xAxis->setBasePen(QPen(style.palette.color(QPalette::Text)));
 
-    yAxis->setLabel("Percentage of frames");
-    yAxis->setLabelColor(style.palette.color(QPalette::Text));
-    yAxis->setTickLabelColor(style.palette.color(QPalette::Text));
-    yAxis->setTickPen(style.palette.color(QPalette::Text));
-    yAxis->setBasePen(style.palette.color(QPalette::Text));
+    qcp->yAxis->setLabel("Percentage of frames");
+    qcp->yAxis->setLabelColor(style.palette.color(QPalette::Text));
+    qcp->yAxis->setTickLabelColor(style.palette.color(QPalette::Text));
+    qcp->yAxis->setTickPen(style.palette.color(QPalette::Text));
+    qcp->yAxis->setBasePen(style.palette.color(QPalette::Text));
 
     QColor tmp = style.palette.color(QPalette::Text);
     tmp.setAlpha(64);
     graph->setPen(QPen(style.palette.color(QPalette::Text)));
     graph->setBrush(tmp);
-    setBackground(style.palette.background());
+    qcp->setBackground(style.palette.background());
 
     showSamplingText();
 
-    setNotAntialiasedElements(QCP::aeAll);
-    setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
+    qcp->setNotAntialiasedElements(QCP::aeAll);
+    qcp->setPlottingHints(QCP::phFastPolylines | QCP::phCacheLabels);
 }
 
 void QualityHistogram::addFrameStats(SharedData data)
@@ -192,9 +204,9 @@ void QualityHistogram::clear()
     accumulator = decltype(accumulator)(boost::accumulators::tag::density::cache_size = n,
                                         boost::accumulators::tag::density::num_bins = N);
     counter = 0;
-    graph->clearData();
+    graph->data()->clear();
     showSamplingText();
-    replot();
+    qcp->replot(QCustomPlot::rpQueuedReplot);
 }
 
 void QualityHistogram::draw()
@@ -202,7 +214,7 @@ void QualityHistogram::draw()
     if (counter > (decltype(counter))n) {
         auto histogram = boost::accumulators::density(accumulator);
         if (samplingLabel) {
-            removeItem(samplingLabel);
+            qcp->removeItem(samplingLabel);
             samplingLabel = nullptr;
             // Set bar width.
             auto v2 = histogram.begin();
@@ -210,40 +222,43 @@ void QualityHistogram::draw()
             ++v1;
             graph->setWidth((v2->first - v1->first));
         }
-        graph->clearData();
+        graph->data()->clear();
         for (auto& h : histogram) {
             graph->addData(h.first, h.second*100);
         }
-        rescaleAxes();
-        replot();
+        qcp->rescaleAxes();
+        qcp->replot(QCustomPlot::rpQueuedReplot);
     }
 }
 
 void QualityHistogram::showSamplingText()
 {
-    samplingLabel = createSamplingLabel(this);
-    addItem(samplingLabel);
+    samplingLabel = createSamplingLabel(qcp);
 }
 
-ImageHistogram::ImageHistogram(QWidget* parent): QCustomPlot(parent)
+ImageHistogram::ImageHistogram(QWidget* parent): QWidget(parent)
 {
+    qcp = new QCustomPlot(this);
+    auto lay = new QHBoxLayout;
+    setContentsMargins(0, 0, 0, 0);
+    setLayout(lay);
+    lay->setContentsMargins(0, 0, 0, 0);
+    lay->addWidget(qcp);
+
     QStyleOption style;
-    red = new QCPBars(xAxis, yAxis);
-    green = new QCPBars(xAxis, yAxis);
-    blue = new QCPBars(xAxis, yAxis);
-    addPlottable(red);
-    addPlottable(green);
-    addPlottable(blue);
+    red = new QCPBars(qcp->xAxis, qcp->yAxis);
+    green = new QCPBars(qcp->xAxis, qcp->yAxis);
+    blue = new QCPBars(qcp->xAxis, qcp->yAxis);
     green->moveAbove(blue);
     red->moveAbove(green);
 
-    xAxis->setTicks(false);
-    xAxis->setTickLabels(false);
-    xAxis->setBasePen(style.palette.color(QPalette::Text));
+    qcp->xAxis->setTicks(false);
+    qcp->xAxis->setTickLabels(false);
+    qcp->xAxis->setBasePen(style.palette.color(QPalette::Text));
 
-    yAxis->setTicks(false);
-    yAxis->setTickLabels(false);
-    yAxis->setBasePen(style.palette.color(QPalette::Text));
+    qcp->yAxis->setTicks(false);
+    qcp->yAxis->setTickLabels(false);
+    qcp->yAxis->setBasePen(style.palette.color(QPalette::Text));
 
     red->setPen(QPen(QColor(255, 0, 0, 128)));
     red->setBrush(QColor(255, 0, 0, 128));
@@ -256,14 +271,14 @@ ImageHistogram::ImageHistogram(QWidget* parent): QCustomPlot(parent)
     green->setWidth(1);
     blue->setWidth(1);
 
-    setBackground(style.palette.background());
+    qcp->setBackground(style.palette.background());
 }
 
 void ImageHistogram::updateHistograms(QSharedPointer< Histograms > histograms, bool grayscale)
 {
-    red->clearData();
-    green->clearData();
-    blue->clearData();
+    red->data()->clear();
+    green->data()->clear();
+    blue->data()->clear();
     if (gray != grayscale) {
         gray = grayscale;
         if (gray) {
@@ -285,6 +300,6 @@ void ImageHistogram::updateHistograms(QSharedPointer< Histograms > histograms, b
             blue->addData(i, histograms->blue[i]);
         }
     }
-    rescaleAxes();
-    replot();
+    qcp->rescaleAxes();
+    qcp->replot(QCustomPlot::rpQueuedReplot);
 }
