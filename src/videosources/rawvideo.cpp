@@ -465,4 +465,4 @@ QString RawVideoSource::initialize(QString overrideInput)
     }
 }
 
-Q_IMPORT_PLUGIN(RawVideo)
+Q_IMPORT_PLUGIN(RawVideoSource)

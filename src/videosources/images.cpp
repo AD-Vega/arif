@@ -333,4 +333,4 @@ QString ImageSource::initialize(QString overrideInput)
     return "No images to load.";
 }
 
-Q_IMPORT_PLUGIN(Images)
+Q_IMPORT_PLUGIN(ImageSource)
