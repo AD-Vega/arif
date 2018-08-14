@@ -22,13 +22,13 @@
 #define GLVIDEOWIDGET_H
 
 #include "processing.h"
-#include <QGLWidget>
+#include <QOpenGLWidget>
 #include <QImage>
 #include <QMouseEvent>
 #include <QSvgRenderer>
 #include <opencv2/core/core.hpp>
 
-class GLVideoWidget : public QGLWidget
+class GLVideoWidget : public QOpenGLWidget
 {
     Q_OBJECT
 
@@ -64,6 +64,7 @@ private:
     QRect rectangle, drawnRectangle;
     QSize fixedSize;
     QPen whitepen, blackpen;
+    QBrush backgroundBrush;
     PaintObjects drawnObjects;
 };
 

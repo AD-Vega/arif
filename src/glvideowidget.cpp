@@ -20,12 +20,10 @@
 
 #include "glvideowidget.h"
 #include <QStyleOption>
+#include <QPainter>
 
 GLVideoWidget::GLVideoWidget(QWidget* parent) :
-    QGLWidget(QGLFormat(QGL::NoDepthBuffer |
-                        QGL::SampleBuffers |
-                        QGL::Rgba),
-              parent),
+    QOpenGLWidget(parent),
     idleImageRenderer(QString("/usr/share/qarv/2/video-display.svgz")),
     idling(true), selecting(false),
     drawRectangle(false), fixedSelection(false), corner1(), corner2(),
@@ -36,6 +34,10 @@ GLVideoWidget::GLVideoWidget(QWidget* parent) :
     blackpen.setWidth(0);
     setAttribute(Qt::WA_NoSystemBackground);
     setAttribute(Qt::WA_OpaquePaintEvent);
+
+    QStyleOption opt;
+    opt.initFrom(this);
+    backgroundBrush = opt.palette.brush(QPalette::Background);
 }
 
 GLVideoWidget::~GLVideoWidget() {}
@@ -100,7 +102,7 @@ QImage* GLVideoWidget::unusedFrame()
 
 void GLVideoWidget::resizeEvent(QResizeEvent* event)
 {
-    QGLWidget::resizeEvent(event);
+    QOpenGLWidget::resizeEvent(event);
     auto view = rect();
     out = view;
     QSize thesize;
@@ -130,6 +132,7 @@ void GLVideoWidget::resizeEvent(QResizeEvent* event)
 void GLVideoWidget::paintGL()
 {
     QPainter painter(this);
+    painter.fillRect(out, backgroundBrush);
     if (!idling) {
         if (in.size() != out.size())
             painter.setRenderHint(QPainter::SmoothPixmapTransform);
@@ -152,9 +155,6 @@ void GLVideoWidget::paintGL()
             }
         }
     } else {
-        QStyleOption opt;
-        opt.initFrom(this);
-        painter.fillRect(out, opt.palette.color(QPalette::Background));
         idleImageRenderer.render(&painter, out);
     }
 }
