@@ -1,8 +1,8 @@
 project(arif)
-cmake_minimum_required(VERSION 2.8)
-find_package(Qt4 REQUIRED QtCore QtGui QtOpenGL QtNetwork QtSVG)
-include(${QT_USE_FILE})
+cmake_minimum_required(VERSION 3.9)
+
 include(FindPkgConfig)
+include(CheckSymbolExists)
 
 macro(set_prefixed varname string)
   set(${varname})
@@ -11,18 +11,24 @@ macro(set_prefixed varname string)
   endforeach(name)
 endmacro(set_prefixed)
 
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
+
+find_package(Qt5 REQUIRED COMPONENTS
+             Core Gui Widgets OpenGL Network Svg LinguistTools)
+set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::OpenGL Qt5::Network Qt5::Svg)
+
 find_package(OpenCV REQUIRED)
-pkg_check_modules(PKGCONFS REQUIRED qarv-2 libswscale libavcodec libavutil tclap)
+pkg_check_modules(PKGCONFS REQUIRED qarv-3 libswscale libavcodec libavutil tclap)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 find_package(Boost COMPONENTS system REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 -Wall ${PKGCONFS_CFLAGS}")
+set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall ${PKGCONFS_CFLAGS}")
 set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3")
 set(CMAKE_CXX_FLAGS_RELWITHDEBINFO "${CMAKE_CXX_FLAGS_RELWITHDEBINFO} -O3")
 
-include_directories(${QT_INCLUDES} ${CMAKE_CURRENT_BINARY_DIR} ${GIO_INCLUDE_DIRS}
-  ${CMAKE_CURRENT_SOURCE_DIR}/src)
+include_directories(${GIO_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set_prefixed(arif_videosources_SRC videosources/
   interfaces.cpp
@@ -61,13 +67,13 @@ set_prefixed(arif_MOC src/
   qcustomplot.h
   plotwidgets.h
 )
-qt4_wrap_ui(arif_UI
+qt5_wrap_ui(arif_UI
   ${arif_UI_pre}
 )
-qt4_wrap_cpp(arif_MOC_MOCD
+qt5_wrap_cpp(arif_MOC_MOCD
   ${arif_MOC}
 )
-qt4_add_resources(arif_QRC res/icons/icons.qrc)
+qt5_add_resources(arif_QRC res/icons/icons.qrc)
 add_executable(arif
   ${arif_SRC}
   ${arif_MOC_MOCD}
