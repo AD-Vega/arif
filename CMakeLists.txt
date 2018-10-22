@@ -21,6 +21,7 @@ find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-3 libswscale libavcodec libavutil tclap)
 pkg_check_modules(GIO REQUIRED gio-2.0)
 find_package(Boost COMPONENTS system REQUIRED)
+find_package(Threads REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
 set(CMAKE_CXX_STANDARD 14)
@@ -87,6 +88,7 @@ target_link_libraries(arif
   ${PKGCONFS_LDFLAGS}
   ${OpenCV_LIBS}
   ${Boost_LIBRARIES}
+  ${CMAKE_THREAD_LIBS_INIT}
 )
 
 install(TARGETS arif
