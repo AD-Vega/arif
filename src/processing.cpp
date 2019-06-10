@@ -103,8 +103,14 @@ void DecodeStage(SharedData d)
         d->decoded.convertTo(d->decodedFloat, CV_32F);
     else
         d->decodedFloat = d->decoded;
-    if (d->decodedFloat.channels() > 1)
+
+    if (d->decodedFloat.channels() > 1) {
+#if CV_VERSION_MAJOR > 3
+        cv::cvtColor(d->decodedFloat, d->grayscale, cv::COLOR_BGR2GRAY);
+#else
         cv::cvtColor(d->decodedFloat, d->grayscale, CV_BGR2GRAY);
+#endif
+    }
     else
         d->grayscale = d->decodedFloat;
 }

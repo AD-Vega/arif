@@ -58,7 +58,11 @@ const cv::Mat ImageDecoder::decode(RawFrame* in)
 {
     auto f = static_cast<ImageFrame*>(in);
     return cv::imread(f->filename.toStdString(),
+#if CV_VERSION_MAJOR > 3
+                      cv::IMREAD_ANYCOLOR | cv::IMREAD_ANYDEPTH);
+#else
                       CV_LOAD_IMAGE_ANYCOLOR | CV_LOAD_IMAGE_ANYDEPTH);
+#endif
 }
 
 VideoSourcePlugin* ImageDecoder::plugin()
