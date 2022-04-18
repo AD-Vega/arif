@@ -24,7 +24,8 @@
 
 GLVideoWidget::GLVideoWidget(QWidget* parent) :
     QOpenGLWidget(parent),
-    idleImageRenderer(QString("/usr/share/qarv/2/video-display.svgz")),
+    // TODO we have no way to find QArv's files right now.
+    idleImageRenderer(QString("/usr/share/qarv/3/video-display.svgz")),
     idling(true), selecting(false),
     drawRectangle(false), fixedSelection(false), corner1(), corner2(),
     rectangle(), whitepen(Qt::white), blackpen(Qt::black)
