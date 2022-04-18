@@ -183,7 +183,7 @@ void ArifMainWindow::frameProcessed(SharedData data)
                 cv::Rect ct(t.x(), t.y(), t.width(), t.height());
                 cv::Mat_<float> m = data->grayscale(ct);
                 m = m.clone().reshape(1, m.total());
-                qSort(m);
+                std::sort(m.begin(), m.end());
                 // Disregard burnt pixels, so pick the 99% brightest.
                 thresholdSpinbox->setValue(m(.99 * m.total()));
             }
@@ -362,7 +362,7 @@ void ArifMainWindow::readerFinished()
             processButton->setChecked(false);
         } else {
             // Start second pass.
-            qSort(entireFileQualities);
+            std::sort(entireFileQualities.begin(), entireFileQualities.end());
             int acceptance = acceptanceSpinbox->value();
             int minIdx = entireFileQualities.count() * (100 - acceptance) / 100;
             float minQuality = entireFileQualities.at(minIdx);

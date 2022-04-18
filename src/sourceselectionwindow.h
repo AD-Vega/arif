@@ -28,7 +28,7 @@ class SourceSelectionWindow: public QDialog
     Q_OBJECT
 
 public:
-    explicit SourceSelectionWindow(QWidget* parent = 0, Qt::WindowFlags f = 0);
+    explicit SourceSelectionWindow(QWidget* parent = 0, Qt::WindowFlags f = Qt::Widget);
     VideoSourcePlugin* selectedSource = nullptr;
     QWidget* sourceControl = nullptr;
 

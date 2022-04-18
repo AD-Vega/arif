@@ -83,7 +83,7 @@ QualityGraph::QualityGraph(QWidget* parent):
 
     longGraph->setPen(QPen(color1));
     shortGraph->setPen(QPen(color2));
-    qcp->setBackground(style.palette.background());
+    qcp->setBackground(style.palette.window());
 
     showSamplingText();
 
@@ -182,7 +182,7 @@ QualityHistogram::QualityHistogram(QWidget* parent):
     tmp.setAlpha(64);
     graph->setPen(QPen(style.palette.color(QPalette::Text)));
     graph->setBrush(tmp);
-    qcp->setBackground(style.palette.background());
+    qcp->setBackground(style.palette.window());
 
     showSamplingText();
 
@@ -271,7 +271,7 @@ ImageHistogram::ImageHistogram(QWidget* parent): QWidget(parent)
     green->setWidth(1);
     blue->setWidth(1);
 
-    qcp->setBackground(style.palette.background());
+    qcp->setBackground(style.palette.window());
 }
 
 void ImageHistogram::updateHistograms(QSharedPointer< Histograms > histograms, bool grayscale)

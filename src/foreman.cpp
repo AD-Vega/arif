@@ -140,7 +140,7 @@ Foreman::flush(QList< Foreman::QueuedImage > queue, int acceptance)
 {
     QList<QSharedPointer<cv::Mat>> localPool;
     bool success = true;
-    qSort(queue);
+    std::sort(queue.begin(), queue.end());
     int min = queue.count() * (100 - acceptance) / 100;
     for (int i = queue.count() - 1; i >= min; i--) {
         auto& qi = queue.at(i);

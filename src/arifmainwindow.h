@@ -33,7 +33,7 @@ public:
                             QString settingsFile = QString{},
                             QString destinationDir = QString{},
                             QWidget* parent = 0,
-                            Qt::WindowFlags flags = 0);
+                            Qt::WindowFlags flags = Qt::Widget);
 
 private slots:
     void initialize();

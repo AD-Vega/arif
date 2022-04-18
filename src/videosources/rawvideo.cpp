@@ -28,7 +28,7 @@ extern "C" {
 #include <unistd.h>
 #include <sys/stat.h>
 #include <libavutil/pixdesc.h>
-#include <libavcodec/avcodec.h>
+#include <libavutil/imgutils.h>
 #include <libswscale/swscale.h>
 }
 
@@ -250,7 +250,7 @@ void RawVideoReader::setupAsio(int fd)
     auto buf = boost::asio::buffer(bufv.data(), hbytes);
     try {
         boost::asio::read(stream, buf);
-    } catch (boost::system::system_error err) {
+    } catch (const boost::system::system_error& err) {
         errcode = err.code();
     }
     if (!errcode) {
@@ -440,9 +440,7 @@ QString RawVideoSource::initialize(QString overrideInput)
                  settings.value("height", 480).toInt());
     pixfmt = av_get_pix_fmt(settings.value("pixformat").toString().toLatin1());
     headerBytes = settings.value("header_bytes").toInt();
-    frameBytes = avpicture_get_size(pixfmt,
-                                    size.width(),
-                                    size.height());
+    frameBytes = av_image_get_buffer_size(pixfmt, size.width(), size.height(), 1);
     bool isLive = settings.value("live", false).toBool();
 
     auto& name = file;
