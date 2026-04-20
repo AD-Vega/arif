@@ -131,7 +131,7 @@ class AsioThread: public QThread
     Q_OBJECT
 
 public:
-    AsioThread(boost::asio::io_service* service):
+    AsioThread(boost::asio::io_context* service):
         QThread(), serviceptr(service) {}
 
     void run() {
@@ -139,7 +139,7 @@ public:
     }
 
 private:
-    boost::asio::io_service* serviceptr;
+    boost::asio::io_context* serviceptr;
 };
 
 
@@ -169,9 +169,9 @@ private:
     typedef std::function<void(const boost::system::error_code&,
                                std::size_t)> asyncHandlerType;
 
-    boost::asio::io_service service;
+    boost::asio::io_context service;
     boost::asio::posix::stream_descriptor stream;
-    boost::asio::io_service::work work;
+    boost::asio::executor_work_guard<boost::asio::io_context::executor_type> work;
     boost::system::error_code errcode;
     QFile file;
     std::FILE* process = nullptr;
