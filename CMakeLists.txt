@@ -1,5 +1,5 @@
+cmake_minimum_required(VERSION 3.9...3.30)
 project(arif)
-cmake_minimum_required(VERSION 3.9)
 
 include(FindPkgConfig)
 include(CheckSymbolExists)
