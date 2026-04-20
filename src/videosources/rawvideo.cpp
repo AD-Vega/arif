@@ -96,7 +96,7 @@ const cv::Mat RawVideoDecoder::decode(RawFrame* in)
 static const int frameQueueMax = QThread::idealThreadCount() + 1;
 
 RawVideoReader::RawVideoReader():
-    stream(service), work(service), asioThread(&service)
+    stream(service), work(boost::asio::make_work_guard(service)), asioThread(&service)
 {
 
 }
