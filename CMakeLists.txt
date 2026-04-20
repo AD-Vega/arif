@@ -20,7 +20,7 @@ set(QT_LIBRARIES Qt5::Core Qt5::Gui Qt5::Widgets Qt5::Network Qt5::Svg Qt5::Conc
 find_package(OpenCV REQUIRED)
 pkg_check_modules(PKGCONFS REQUIRED qarv-3 libswscale libavcodec libavutil tclap)
 pkg_check_modules(GIO REQUIRED gio-2.0)
-find_package(Boost COMPONENTS system REQUIRED)
+find_package(Boost REQUIRED)
 find_package(Threads REQUIRED)
 
 string(REPLACE ";" " " PKGCONFS_CFLAGS "${PKGCONFS_CFLAGS}")
